@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#18181b"/>
+      <stop offset="100%" stop-color="#0e0e10"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde087"/>
+      <stop offset="50%" stop-color="#d4af37"/>
+      <stop offset="100%" stop-color="#b89228"/>
+    </linearGradient>
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e5c558" stop-opacity="0.6"/>
+      <stop offset="50%" stop-color="#aa8420" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#d4af37" stop-opacity="0.5"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Dark container matching app header icon -->
+  <rect width="512" height="512" rx="115" fill="url(#bgGrad)"/>
+  
+  <!-- Subtle gold border matching border-[#d4af37]/30 -->
+  <rect x="18" y="18" width="476" height="476" rx="98" fill="none" stroke="url(#borderGrad)" stroke-width="12"/>
+
+  <!-- Lucide Landmark Icon scaled & centered -->
+  <g transform="translate(256, 256) scale(13.2) translate(-12, -12)" fill="none" stroke="url(#goldGrad)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 18v-7" />
+    <path d="M11.12 2.198a2 2 0 0 1 1.76.006l7.866 3.847c.476.233.31.949-.22.949H3.474c-.53 0-.695-.716-.22-.949z" fill="#d4af37" fill-opacity="0.15" />
+    <path d="M14 18v-7" />
+    <path d="M18 18v-7" />
+    <path d="M3 22h18" />
+    <path d="M6 18v-7" />
+  </g>
+</svg>
