@@ -18,6 +18,7 @@ import { MethodGuideModal } from './components/MethodGuideModal';
 import { TransactionHistory } from './components/TransactionHistory';
 import { AuthModal } from './components/AuthModal';
 import { RecurringExpensesModal } from './components/RecurringExpensesModal';
+import { FinancialWisdomBanner } from './components/FinancialWisdomBanner';
 import { useAuth } from './context/AuthContext';
 import {
   initializeUserCloudData,
@@ -562,7 +563,10 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 sm:space-y-8">
+        {/* Dynamic Financial Wisdom & Tip */}
+        <FinancialWisdomBanner />
+
         {/* Intro banner on Seven Jars */}
         <div className="bg-[#121214] border border-white/10 rounded-2xl p-6 sm:p-7 text-[#e5e5e7] shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-[#d4af37]/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
