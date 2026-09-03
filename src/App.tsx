@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { Jar, JarId, Transaction, TransactionType, RecurringExpense } from './types';
 import { DEFAULT_JARS, SAMPLE_TRANSACTIONS } from './data/defaultJars';
 import { DEFAULT_RECURRING_EXPENSES } from './data/defaultRecurringExpenses';
+import { formatCZK } from './utils/formatters';
 import { Header } from './components/Header';
 import { StatsBar } from './components/StatsBar';
 import { JarCard } from './components/JarCard';
@@ -29,13 +30,28 @@ import {
   saveRecurringExpensesToCloud,
   subscribeToUserCloudData,
 } from './services/firestoreSync';
-import { Cloud, ArrowRight, Repeat } from 'lucide-react';
+import { Cloud, ArrowRight, Repeat, RotateCcw, Calendar, X as CloseIcon, Sparkles } from 'lucide-react';
 
 const STORAGE_KEYS = {
   JARS: 'seven_jars_data_v1',
   TRANSACTIONS: 'seven_jars_transactions_v1',
   INCOME: 'seven_jars_monthly_income_v1',
   RECURRING: 'seven_jars_recurring_v1',
+  ACTIVE_MONTH: 'seven_jars_active_month_v1',
+  DISMISSED_DISCREPANCY_NOTICE: 'seven_jars_dismissed_discrepancy_v1',
+};
+
+const getCurrentMonthKey = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+};
+
+const getMonthCzechName = (date = new Date()) => {
+  const monthNames = [
+    'Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen',
+    'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'
+  ];
+  return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
 };
 
 export default function App() {
@@ -97,6 +113,40 @@ export default function App() {
   const [transferSourceJarId, setTransferSourceJarId] = useState<JarId | undefined>(undefined);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [detailJar, setDetailJar] = useState<Jar | null>(null);
+
+  // Month notice and discrepancy banner state
+  const [monthNotice, setMonthNotice] = useState<string | null>(null);
+  const [dismissedNotice, setDismissedNotice] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEYS.DISMISSED_DISCREPANCY_NOTICE) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  // Monthly rollover detection & automatic zero-reset
+  useEffect(() => {
+    const currentKey = getCurrentMonthKey();
+    const savedActiveMonth = localStorage.getItem(STORAGE_KEYS.ACTIVE_MONTH);
+
+    if (savedActiveMonth && savedActiveMonth !== currentKey) {
+      // New month started! Automatic reset of all jars to 0
+      const resetJars = jars.map((j) => ({ ...j, balance: 0 }));
+      setJars(resetJars);
+      localStorage.setItem(STORAGE_KEYS.JARS, JSON.stringify(resetJars));
+      localStorage.setItem(STORAGE_KEYS.ACTIVE_MONTH, currentKey);
+
+      if (user) {
+        saveJarsToCloud(user.uid, resetJars).catch(console.error);
+      }
+
+      setMonthNotice(
+        `Nový měsíc (${getMonthCzechName()}): Všechny džbány byly automaticky nastaveny na 0 Kč pro začátek nového měsíce.`
+      );
+    } else if (!savedActiveMonth) {
+      localStorage.setItem(STORAGE_KEYS.ACTIVE_MONTH, currentKey);
+    }
+  }, [user?.uid]);
 
   // Firestore Real-Time Synchronization
   useEffect(() => {
@@ -195,7 +245,11 @@ export default function App() {
     setIsTransferOpen(true);
   };
 
-  const handleDistribute = async (totalAmount: number, updatedPercentages: Record<JarId, number>) => {
+  const handleDistribute = async (
+    totalAmount: number,
+    updatedPercentages: Record<JarId, number>,
+    mode: 'fresh_month' | 'add_to_existing' = 'fresh_month'
+  ) => {
     setMonthlyIncome(totalAmount);
 
     // Update jar balances and percentages
@@ -205,11 +259,12 @@ export default function App() {
       return {
         ...jar,
         percentage: pct,
-        balance: jar.balance + share,
+        balance: mode === 'fresh_month' ? share : (jar.balance || 0) + share,
       };
     });
 
     setJars(updatedJars);
+    setMonthNotice(null);
 
     // Record transaction
     const now = new Date();
@@ -220,7 +275,10 @@ export default function App() {
       amount: totalAmount,
       type: 'income_distribution',
       jarId: 'necessities', // primary jar label for the overall event
-      note: `Měsíční příděl rozdělen podle poměrů metody 7 džbánů`,
+      note:
+        mode === 'fresh_month'
+          ? `Měsíční rozpočet ${formatCZK(totalAmount)} (nový měsíc od 0 Kč)`
+          : `Přičtení měsíčního příjmu ${formatCZK(totalAmount)} ke stávajícím zůstatkům`,
     };
 
     setTransactions((prev) => [newTx, ...prev]);
@@ -239,6 +297,82 @@ export default function App() {
         setIsSyncing(false);
       }
     }
+  };
+
+  const handleResetJarsToZero = async () => {
+    if (
+      window.confirm(
+        'Opravdu si přejete vynulovat všechny džbány na 0 Kč pro začátek nového měsíce?'
+      )
+    ) {
+      const resetJars = jars.map((j) => ({ ...j, balance: 0 }));
+      setJars(resetJars);
+      localStorage.setItem(STORAGE_KEYS.JARS, JSON.stringify(resetJars));
+
+      const newTx: Transaction = {
+        id: `reset-${Date.now()}`,
+        date: new Date().toISOString().split('T')[0],
+        timestamp: Date.now(),
+        amount: 0,
+        type: 'income_distribution',
+        jarId: 'necessities',
+        note: 'Vynulování všech džbánů na 0 Kč pro nový měsíc',
+      };
+      setTransactions((prev) => [newTx, ...prev]);
+
+      if (user) {
+        setIsSyncing(true);
+        try {
+          await Promise.all([
+            saveJarsToCloud(user.uid, resetJars),
+            saveTransactionToCloud(user.uid, newTx),
+          ]);
+        } catch (err) {
+          console.error('Error resetting jars in cloud:', err);
+        } finally {
+          setIsSyncing(false);
+        }
+      }
+    }
+  };
+
+  const handleApplyIncomeFresh = async () => {
+    const updatedJars = jars.map((jar) => {
+      const share = Math.round((monthlyIncome * jar.percentage) / 100);
+      return {
+        ...jar,
+        balance: share,
+      };
+    });
+
+    setJars(updatedJars);
+    localStorage.setItem(STORAGE_KEYS.JARS, JSON.stringify(updatedJars));
+
+    const newTx: Transaction = {
+      id: `distribute-${Date.now()}`,
+      date: new Date().toISOString().split('T')[0],
+      timestamp: Date.now(),
+      amount: monthlyIncome,
+      type: 'income_distribution',
+      jarId: 'necessities',
+      note: `Nastavení měsíčního příjmu ${formatCZK(monthlyIncome)} (od 0 Kč)`,
+    };
+    setTransactions((prev) => [newTx, ...prev]);
+
+    if (user) {
+      setIsSyncing(true);
+      try {
+        await Promise.all([
+          saveJarsToCloud(user.uid, updatedJars),
+          saveTransactionToCloud(user.uid, newTx),
+        ]);
+      } catch (err) {
+        console.error('Error applying fresh income in cloud:', err);
+      } finally {
+        setIsSyncing(false);
+      }
+    }
+    setMonthNotice(null);
   };
 
   const handleAddTransaction = async (data: {
@@ -610,10 +744,86 @@ export default function App() {
           </div>
         )}
 
+        {/* Month Rollover Notification */}
+        {monthNotice && (
+          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-emerald-300 shadow-lg">
+            <div className="flex items-center gap-3">
+              <Calendar className="w-5 h-5 text-emerald-400 shrink-0" />
+              <p className="text-xs sm:text-sm font-medium">{monthNotice}</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setIsDistributeOpen(true)}
+                className="px-3.5 py-1.5 bg-emerald-500 text-[#0a0a0b] text-xs font-bold rounded-xl hover:brightness-110 transition-all cursor-pointer shadow-sm"
+              >
+                Rozdělit příjem
+              </button>
+              <button
+                onClick={() => setMonthNotice(null)}
+                className="p-1.5 text-emerald-300/60 hover:text-emerald-300 rounded-lg transition-colors cursor-pointer"
+                title="Zavřít"
+              >
+                <CloseIcon className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Existing Data Discrepancy Banner (e.g. When income was entered and added to demo balances) */}
+        {!dismissedNotice && monthlyIncome > 0 && jars.reduce((acc, j) => acc + (j.balance || 0), 0) > 0 && Math.abs(jars.reduce((acc, j) => acc + (j.balance || 0), 0) - monthlyIncome) > 50 && (
+          <div className="bg-gradient-to-r from-[#18181b] to-[#121214] border border-[#d4af37]/35 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="p-2.5 bg-[#d4af37]/15 text-[#d4af37] border border-[#d4af37]/30 rounded-xl shrink-0">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white tracking-wide">
+                  Chcete nastavit džbány přesně podle příjmu {formatCZK(monthlyIncome)}?
+                </h3>
+                <p className="text-xs text-white/60 mt-0.5 leading-relaxed">
+                  Ve džbánech máte nyní celkem {formatCZK(jars.reduce((acc, j) => acc + (j.balance || 0), 0))}. Pokud jste zadali měsíční příjem a přičetl se k původním datům, můžete džbány nastavit čistě od 0 Kč.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <button
+                id="btn-fix-apply-fresh-income"
+                onClick={handleApplyIncomeFresh}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#0a0a0b] bg-gradient-to-r from-[#d4af37] to-[#c59e2b] hover:brightness-110 rounded-xl transition-all shadow-md shadow-[#d4af37]/10 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Rozdělit čistě {formatCZK(monthlyIncome)} (od 0 Kč)</span>
+              </button>
+              <button
+                id="btn-fix-reset-to-zero"
+                onClick={handleResetJarsToZero}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-white/60" />
+                <span>Vynulovat na 0 Kč</span>
+              </button>
+              <button
+                id="btn-dismiss-discrepancy"
+                onClick={() => {
+                  setDismissedNotice(true);
+                  try {
+                    localStorage.setItem(STORAGE_KEYS.DISMISSED_DISCREPANCY_NOTICE, 'true');
+                  } catch {}
+                }}
+                className="p-2 text-white/40 hover:text-white rounded-xl transition-colors cursor-pointer"
+                title="Ponechat a zavřít upozornění"
+              >
+                <CloseIcon className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Quick Stats Bar */}
         <StatsBar
           jars={jars}
           monthlyIncome={monthlyIncome}
+          currentMonthName={getMonthCzechName()}
           onOpenDistribute={() => setIsDistributeOpen(true)}
           onOpenExpense={() => {
             setSelectedJarForTx('necessities');
@@ -622,6 +832,7 @@ export default function App() {
           }}
           onOpenGuide={() => setIsGuideOpen(true)}
           onOpenRecurring={() => setIsRecurringOpen(true)}
+          onResetJarsToZero={handleResetJarsToZero}
           recurringCount={recurringExpenses.filter((e) => e.active).length}
         />
 

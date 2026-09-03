@@ -6,7 +6,7 @@ export const DEFAULT_JARS: Jar[] = [
     name: '1. Nutné životní potřeby',
     shortName: 'Nutnosti',
     percentage: 50,
-    balance: 14200,
+    balance: 0,
     colorKey: 'amber',
     theme: {
       badgeBg: 'bg-amber-500/10 border border-amber-500/30',
@@ -28,7 +28,7 @@ export const DEFAULT_JARS: Jar[] = [
     name: '2. Finanční svoboda & Investice',
     shortName: 'Fin. svoboda',
     percentage: 10,
-    balance: 45000,
+    balance: 0,
     colorKey: 'emerald',
     theme: {
       badgeBg: 'bg-emerald-500/10 border border-emerald-500/30',
@@ -50,7 +50,7 @@ export const DEFAULT_JARS: Jar[] = [
     name: '3. Nouzová rezerva',
     shortName: 'Rezerva',
     percentage: 10,
-    balance: 38000,
+    balance: 0,
     colorKey: 'blue',
     theme: {
       badgeBg: 'bg-blue-500/10 border border-blue-500/30',
@@ -72,7 +72,7 @@ export const DEFAULT_JARS: Jar[] = [
     name: '4. Dlouhodobé cíle a sny',
     shortName: 'Sny a cíle',
     percentage: 10,
-    balance: 21500,
+    balance: 0,
     colorKey: 'purple',
     theme: {
       badgeBg: 'bg-purple-500/10 border border-purple-500/30',
@@ -94,7 +94,7 @@ export const DEFAULT_JARS: Jar[] = [
     name: '5. Vzdělání a osobní rozvoj',
     shortName: 'Vzdělání',
     percentage: 5,
-    balance: 4200,
+    balance: 0,
     colorKey: 'indigo',
     theme: {
       badgeBg: 'bg-indigo-500/10 border border-indigo-500/30',
@@ -116,7 +116,7 @@ export const DEFAULT_JARS: Jar[] = [
     name: '6. Zábava a radost',
     shortName: 'Zábava (Hra)',
     percentage: 10,
-    balance: 3400,
+    balance: 0,
     colorKey: 'rose',
     theme: {
       badgeBg: 'bg-rose-500/10 border border-rose-500/30',
@@ -138,7 +138,7 @@ export const DEFAULT_JARS: Jar[] = [
     name: '7. Dary a dobročinnost',
     shortName: 'Dary & Pomoc',
     percentage: 5,
-    balance: 2800,
+    balance: 0,
     colorKey: 'teal',
     theme: {
       badgeBg: 'bg-teal-500/10 border border-teal-500/30',
@@ -216,54 +216,4 @@ export const PRESET_ALLOCATIONS: PresetAllocation[] = [
   },
 ];
 
-export const SAMPLE_TRANSACTIONS: Transaction[] = [
-  {
-    id: 'tx-1',
-    date: '2026-09-01',
-    timestamp: 1756684800000,
-    amount: 45000,
-    type: 'income_distribution',
-    jarId: 'necessities',
-    note: 'Rozdělení měsíční mzdy podle metody 7 džbánů',
-  },
-  {
-    id: 'tx-2',
-    date: '2026-09-02',
-    timestamp: 1756771200000,
-    amount: 1450,
-    type: 'expense',
-    jarId: 'necessities',
-    category: 'Potraviny',
-    note: 'Týdenní nákup v supermarketu',
-  },
-  {
-    id: 'tx-3',
-    date: '2026-09-02',
-    timestamp: 1756771200000,
-    amount: 4500,
-    type: 'expense',
-    jarId: 'freedom',
-    category: 'ETF S&P 500',
-    note: 'Trvalý příkaz – nákup indexového fondu',
-  },
-  {
-    id: 'tx-4',
-    date: '2026-09-02',
-    timestamp: 1756771200000,
-    amount: 650,
-    type: 'expense',
-    jarId: 'play',
-    category: 'Restaurace',
-    note: 'Páteční večeře a drink s přáteli',
-  },
-  {
-    id: 'tx-5',
-    date: '2026-09-02',
-    timestamp: 1756771200000,
-    amount: 490,
-    type: 'expense',
-    jarId: 'education',
-    category: 'Knihy',
-    note: 'Kniha: Psychologie peněz (Morgan Housel)',
-  },
-];
+export const SAMPLE_TRANSACTIONS: Transaction[] = [];

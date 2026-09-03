@@ -11,7 +11,11 @@ interface IncomeDistributorModalProps {
   onClose: () => void;
   jars: Jar[];
   initialIncome: number;
-  onDistribute: (totalAmount: number, updatedPercentages: Record<JarId, number>) => void;
+  onDistribute: (
+    totalAmount: number,
+    updatedPercentages: Record<JarId, number>,
+    mode: 'fresh_month' | 'add_to_existing'
+  ) => void;
 }
 
 export const IncomeDistributorModal: React.FC<IncomeDistributorModalProps> = ({
@@ -22,6 +26,7 @@ export const IncomeDistributorModal: React.FC<IncomeDistributorModalProps> = ({
   onDistribute,
 }) => {
   const [income, setIncome] = useState<number>(initialIncome || 45000);
+  const [distributionMode, setDistributionMode] = useState<'fresh_month' | 'add_to_existing'>('fresh_month');
   const [percentages, setPercentages] = useState<Record<JarId, number>>(() => {
     const map: Record<string, number> = {};
     jars.forEach((j) => {
@@ -65,7 +70,7 @@ export const IncomeDistributorModal: React.FC<IncomeDistributorModalProps> = ({
       // ignore if confetti fails
     }
 
-    onDistribute(income, percentages);
+    onDistribute(income, percentages, distributionMode);
     onClose();
   };
 
@@ -165,6 +170,76 @@ export const IncomeDistributorModal: React.FC<IncomeDistributorModalProps> = ({
             </div>
           </div>
 
+          {/* Distribution Mode Selection: Fresh Month vs Add */}
+          <div className="p-3.5 rounded-xl bg-[#161618] border border-white/10 space-y-2">
+            <label className="block text-[11px] font-semibold text-white/60 uppercase tracking-wider">
+              Způsob rozdělení do džbánů
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                id="btn-mode-fresh-month"
+                onClick={() => setDistributionMode('fresh_month')}
+                className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                  distributionMode === 'fresh_month'
+                    ? 'bg-[#d4af37]/15 border-[#d4af37] text-white shadow-xs'
+                    : 'bg-[#121214] border-white/10 text-white/60 hover:text-white hover:border-white/20'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                      distributionMode === 'fresh_month'
+                        ? 'border-[#d4af37] bg-[#d4af37]'
+                        : 'border-white/30 bg-transparent'
+                    }`}
+                  >
+                    {distributionMode === 'fresh_month' && (
+                      <div className="w-1.5 h-1.5 rounded-full bg-black" />
+                    )}
+                  </div>
+                  <span className="text-xs font-bold text-white">
+                    Nový měsíc (začít od 0 Kč)
+                  </span>
+                </div>
+                <p className="text-[11px] text-white/50 mt-1 pl-6 leading-relaxed">
+                  Vynuluje předchozí zůstatky. Džbány budou obsahovat přesně {formatCZK(income)}.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                id="btn-mode-add-existing"
+                onClick={() => setDistributionMode('add_to_existing')}
+                className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                  distributionMode === 'add_to_existing'
+                    ? 'bg-[#d4af37]/15 border-[#d4af37] text-white shadow-xs'
+                    : 'bg-[#121214] border-white/10 text-white/60 hover:text-white hover:border-white/20'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                      distributionMode === 'add_to_existing'
+                        ? 'border-[#d4af37] bg-[#d4af37]'
+                        : 'border-white/30 bg-transparent'
+                    }`}
+                  >
+                    {distributionMode === 'add_to_existing' && (
+                      <div className="w-1.5 h-1.5 rounded-full bg-black" />
+                    )}
+                  </div>
+                  <span className="text-xs font-bold text-white">
+                    Přičíst ke stávajícím zůstatkům
+                  </span>
+                </div>
+                <p className="text-[11px] text-white/50 mt-1 pl-6 leading-relaxed">
+                  Ponechá naspořené částky v džbánech a nový příděl k nim přičte navíc.
+                </p>
+              </button>
+            </div>
+          </div>
+
           {/* Jars Allocation List */}
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -196,6 +271,10 @@ export const IncomeDistributorModal: React.FC<IncomeDistributorModalProps> = ({
               {jars.map((jar) => {
                 const pct = percentages[jar.id] ?? jar.percentage;
                 const allocatedKč = Math.round((income * pct) / 100);
+                const finalBalance =
+                  distributionMode === 'fresh_month'
+                    ? allocatedKč
+                    : (jar.balance || 0) + allocatedKč;
 
                 return (
                   <div
@@ -211,7 +290,11 @@ export const IncomeDistributorModal: React.FC<IncomeDistributorModalProps> = ({
                           {jar.name}
                         </p>
                         <p className="text-[11px] text-white/40 truncate">
-                          {jar.shortName}
+                          {distributionMode === 'fresh_month' ? (
+                            <span>Výsledný stav: <strong className="text-emerald-400 font-semibold">{formatCZK(finalBalance)}</strong></span>
+                          ) : (
+                            <span>Původní {formatCZK(jar.balance)} + {formatCZK(allocatedKč)} = <strong className="text-emerald-400 font-semibold">{formatCZK(finalBalance)}</strong></span>
+                          )}
                         </p>
                       </div>
                     </div>
@@ -219,7 +302,7 @@ export const IncomeDistributorModal: React.FC<IncomeDistributorModalProps> = ({
                     <div className="flex items-center gap-3 shrink-0">
                       <div className="text-right">
                         <p className="text-xs font-bold text-white">
-                          {formatCZK(allocatedKč)}
+                          +{formatCZK(allocatedKč)}
                         </p>
                       </div>
 
