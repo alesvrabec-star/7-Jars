@@ -28,8 +28,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 function getFriendlyErrorMessage(error: AuthError | Error | unknown): string {
   if (!error || typeof error !== 'object') return 'Došlo k neočekávané chybě.';
   const code = 'code' in error ? (error as AuthError).code : '';
+  const rawMsg = 'message' in error && typeof (error as Error).message === 'string' ? (error as Error).message : '';
 
   switch (code) {
+    case 'auth/unauthorized-domain':
+      return 'Tato doména (např. na Vercelu) není přidána mezi povolené domény v nastavení Firebase. Ve Firebase Console (Authentication → Settings → Authorized domains) přidejte doménu vaší aplikace (např. vaše-aplikace.vercel.app).';
+    case 'auth/operation-not-allowed':
+      return 'Tento způsob přihlášení není povolen v nastavení Firebase Authentication. Ve Firebase Console (Authentication → Sign-in method) povolte Email/Password nebo Google.';
+    case 'auth/api-key-not-valid':
+    case 'auth/invalid-api-key':
+      return 'Neplatný Firebase API klíč. Zkontrolujte prosím proměnné prostředí na Vercelu nebo konfigurační soubor.';
+    case 'auth/admin-restricted-operation':
+      return 'Tato operace je omezena administrátorem projektu Firebase.';
     case 'auth/invalid-email':
       return 'Zadaná e-mailová adresa má neplatný formát.';
     case 'auth/user-disabled':
@@ -47,10 +57,13 @@ function getFriendlyErrorMessage(error: AuthError | Error | unknown): string {
     case 'auth/popup-blocked':
       return 'Prohlížeč zablokoval vyskakovací okno. Povolte prosím vyskakovací okna nebo použijte e-mail a heslo.';
     case 'auth/network-request-failed':
-      return 'Chyba připojení k internetu. Zkontrolujte prosím síťové spojení.';
+      return 'Chyba připojení k internetu nebo požadavek zablokoval prohlížeč/adblocker.';
     case 'auth/too-many-requests':
       return 'Příliš mnoho neúspěšných pokusů. Zkuste to prosím za chvíli.';
     default:
+      if (code) {
+        return `Chyba [${code}]: ${rawMsg || 'Zkuste to prosím znovu.'}`;
+      }
       return 'Nastala chyba při ověřování. Zkuste to prosím znovu.';
   }
 }

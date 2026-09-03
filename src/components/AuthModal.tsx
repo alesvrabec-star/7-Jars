@@ -207,9 +207,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
           {/* Feedback messages */}
           {(authError || localError) && (
-            <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs flex items-start gap-2">
-              <span className="font-bold">Chyba:</span>
-              <span>{authError || localError}</span>
+            <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs space-y-2">
+              <div className="flex items-start gap-2">
+                <span className="font-bold text-rose-400 shrink-0">Chyba:</span>
+                <span className="leading-relaxed">{authError || localError}</span>
+              </div>
+              {(authError?.includes('Authorized domains') || authError?.includes('Vercel')) && (
+                <div className="mt-2 pt-2 border-t border-rose-500/20 text-[11px] text-white/70 space-y-1">
+                  <p className="font-semibold text-[#d4af37]">Jak to rychle vyřešit v konzoli Firebase:</p>
+                  <ol className="list-decimal list-inside space-y-1 text-white/60 pl-1">
+                    <li>Otevřete <strong className="text-white">console.firebase.google.com</strong></li>
+                    <li>Vyberte váš projekt a přejděte na <strong className="text-white">Authentication → Settings → Authorized domains</strong></li>
+                    <li>Klikněte na <strong className="text-white">Add domain</strong> a vložte doménu vašeho Vercel webu (např. <code className="text-[#d4af37]">vas-projekt.vercel.app</code>)</li>
+                  </ol>
+                </div>
+              )}
             </div>
           )}
 
