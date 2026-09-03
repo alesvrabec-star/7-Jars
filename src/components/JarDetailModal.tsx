@@ -28,23 +28,27 @@ export const JarDetailModal: React.FC<JarDetailModalProps> = ({
   return (
     <div
       id="jar-detail-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-4 overflow-y-auto overscroll-contain"
+      style={{
+        paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0.75rem))',
+        paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0.75rem))',
+      }}
     >
-      <div className="relative w-full max-w-2xl bg-[#121214] rounded-2xl shadow-2xl border border-white/10 text-[#e5e5e7] overflow-hidden my-8">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-[#161618]/80">
-          <div className="flex items-center gap-3">
-            <div className={`p-3 rounded-2xl ${jar.theme.iconBg}`}>
-              <JarIcon name={jar.icon} className="w-6 h-6" />
+      <div className="relative w-full max-w-2xl bg-[#121214] rounded-2xl shadow-2xl border border-white/10 text-[#e5e5e7] flex flex-col max-h-[calc(100dvh-1.5rem)] sm:max-h-[88vh] overflow-hidden my-auto">
+        {/* Header - ALWAYS VISIBLE */}
+        <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/5 bg-[#161618]">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className={`p-2 sm:p-2.5 rounded-xl ${jar.theme.iconBg} shrink-0`}>
+              <JarIcon name={jar.icon} className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-white tracking-wide">{jar.name}</h2>
+                <h2 className="text-base sm:text-lg font-bold text-white tracking-wide">{jar.name}</h2>
                 <span className={`px-2 py-0.5 text-xs font-semibold rounded-md border ${jar.theme.badgeBg} ${jar.theme.badgeText}`}>
                   {jar.percentage} %
                 </span>
               </div>
-              <p className="text-xs text-white/40 font-normal mt-0.5">
+              <p className="text-[11px] sm:text-xs text-white/40 font-normal mt-0.5">
                 {jar.purpose}
               </p>
             </div>
@@ -52,13 +56,14 @@ export const JarDetailModal: React.FC<JarDetailModalProps> = ({
           <button
             id="btn-close-detail-modal"
             onClick={onClose}
-            className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+            aria-label="Zavřít"
+            className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 overscroll-contain">
           {/* Balance card */}
           <div className="p-4 rounded-xl bg-[#161618] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>

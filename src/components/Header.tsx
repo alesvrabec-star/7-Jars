@@ -13,7 +13,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenGuide, onOpenAuth, isSynci
   const { user, logout } = useAuth();
 
   return (
-    <header className="border-b border-white/5 bg-[#0a0a0b]/90 backdrop-blur-md sticky top-0 z-30">
+    <header className="border-b border-white/5 bg-[#0a0a0b]/90 backdrop-blur-md sticky top-0 z-30 pt-[env(safe-area-inset-top,0px)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
         <div className="flex items-center gap-3.5">
           <div className="w-10 h-10 rounded-xl bg-[#161618] border border-[#d4af37]/30 text-[#d4af37] flex items-center justify-center shadow-lg shadow-black/40">

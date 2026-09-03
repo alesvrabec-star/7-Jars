@@ -69,11 +69,15 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   return (
     <div
       id="transaction-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-4 overflow-y-auto overscroll-contain"
+      style={{
+        paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0.75rem))',
+        paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0.75rem))',
+      }}
     >
-      <div className="relative w-full max-w-lg bg-[#121214] rounded-2xl shadow-2xl border border-white/10 text-[#e5e5e7] overflow-hidden my-8">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#161618]/80">
+      <div className="relative w-full max-w-lg bg-[#121214] rounded-2xl shadow-2xl border border-white/10 text-[#e5e5e7] flex flex-col max-h-[calc(100dvh-1.5rem)] sm:max-h-[88vh] overflow-hidden my-auto">
+        {/* Header - ALWAYS VISIBLE */}
+        <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/5 bg-[#161618]">
           <div className="flex items-center gap-2.5">
             <div
               className={`p-2 rounded-xl border ${
@@ -83,16 +87,16 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               }`}
             >
               {type === 'expense' ? (
-                <Minus className="w-5 h-5" />
+                <Minus className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : (
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white tracking-wide">
+              <h2 className="text-sm sm:text-base font-semibold text-white tracking-wide">
                 {type === 'expense' ? 'Zaznamenat výdaj' : 'Vložit peníze do džbánu'}
               </h2>
-              <p className="text-xs text-white/40 font-normal">
+              <p className="text-[11px] sm:text-xs text-white/40 font-normal">
                 Přiřaďte finanční pohyb konkrétnímu džbánu
               </p>
             </div>
@@ -100,13 +104,15 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           <button
             id="btn-close-transaction-modal"
             onClick={onClose}
-            className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+            aria-label="Zavřít"
+            className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 overscroll-contain">
           {/* Toggle Type */}
           <div className="flex rounded-xl bg-[#161618] p-1 border border-white/5">
             <button
@@ -263,20 +269,22 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             />
           </div>
 
-          {/* Submit */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/5">
+          </div>
+
+          {/* Submit - ALWAYS ACCESSIBLE */}
+          <div className="shrink-0 flex items-center justify-end gap-3 p-4 sm:px-6 bg-[#161618] border-t border-white/5">
             <button
               id="btn-cancel-transaction"
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 text-xs uppercase tracking-wider font-semibold text-white/50 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+              className="px-4 py-2.5 text-xs uppercase tracking-wider font-semibold text-white/50 hover:text-white hover:bg-white/5 rounded-xl transition-colors cursor-pointer"
             >
               Zrušit
             </button>
             <button
               id="btn-submit-transaction"
               type="submit"
-              className={`px-5 py-2.5 text-sm font-bold text-white rounded-xl shadow-lg transition-all ${
+              className={`px-5 py-2.5 text-xs sm:text-sm font-bold text-white rounded-xl shadow-lg transition-all cursor-pointer ${
                 type === 'expense'
                   ? 'bg-rose-600 hover:bg-rose-500 shadow-rose-900/20'
                   : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20'

@@ -231,20 +231,24 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
   return (
     <div
       id="recurring-expenses-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-4 overflow-y-auto overscroll-contain"
+      style={{
+        paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0.75rem))',
+        paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0.75rem))',
+      }}
     >
-      <div className="relative w-full max-w-2xl bg-[#121214] rounded-2xl shadow-2xl border border-white/10 text-[#e5e5e7] overflow-hidden my-6">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#161618]/90">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-[#d4af37]/15 text-[#d4af37] border border-[#d4af37]/30 rounded-xl shadow-xs">
-              <Repeat className="w-5 h-5" />
+      <div className="relative w-full max-w-2xl bg-[#121214] rounded-2xl shadow-2xl border border-white/10 text-[#e5e5e7] flex flex-col max-h-[calc(100dvh-1.5rem)] sm:max-h-[88vh] overflow-hidden my-auto">
+        {/* Header - ALWAYS VISIBLE */}
+        <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/5 bg-[#161618]">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="p-2 sm:p-2.5 bg-[#d4af37]/15 text-[#d4af37] border border-[#d4af37]/30 rounded-xl shadow-xs shrink-0">
+              <Repeat className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-white tracking-wide flex items-center gap-2">
+              <h2 className="text-sm sm:text-base font-bold text-white tracking-wide flex items-center gap-2">
                 <span>Pravidelné výdaje & Trvalé příkazy</span>
               </h2>
-              <p className="text-xs text-white/40 font-normal">
+              <p className="text-[11px] sm:text-xs text-white/40 font-normal">
                 Zadejte jednou a každý měsíc jedním kliknutím zaúčtujte do džbánů
               </p>
             </div>
@@ -252,19 +256,20 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
           <button
             id="btn-close-recurring-modal"
             onClick={onClose}
-            className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+            aria-label="Zavřít"
+            className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="flex border-b border-white/5 px-6 pt-3 bg-[#141416]">
+        {/* Navigation Tabs - ALWAYS VISIBLE */}
+        <div className="shrink-0 flex border-b border-white/5 px-4 sm:px-6 pt-2.5 sm:pt-3 bg-[#141416] overflow-x-auto">
           <button
             id="tab-recurring-import"
             type="button"
             onClick={() => setActiveTab('import')}
-            className={`flex items-center gap-2 pb-3 px-3 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+            className={`flex items-center gap-2 pb-3 px-3 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'import'
                 ? 'border-[#d4af37] text-[#d4af37]'
                 : 'border-transparent text-white/50 hover:text-white'
@@ -283,7 +288,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
             id="tab-recurring-manage"
             type="button"
             onClick={() => setActiveTab('manage')}
-            className={`flex items-center gap-2 pb-3 px-3 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+            className={`flex items-center gap-2 pb-3 px-3 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'manage'
                 ? 'border-[#d4af37] text-[#d4af37]'
                 : 'border-transparent text-white/50 hover:text-white'
@@ -299,7 +304,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
 
         {/* Tab 1: Execute / Import to Overview */}
         {activeTab === 'import' && (
-          <div className="p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 sm:space-y-6 overscroll-contain">
             {/* Success message */}
             {executionSuccessMsg && (
               <div className="p-4 bg-emerald-500/15 border border-emerald-500/40 rounded-xl text-emerald-300 text-xs flex items-start gap-2.5 animate-in fade-in duration-200">
@@ -561,7 +566,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
 
         {/* Tab 2: Manage & Add Standing Orders */}
         {activeTab === 'manage' && (
-          <div className="p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 sm:space-y-6 overscroll-contain">
             {/* Add New Expense Form */}
             <form
               onSubmit={handleAddExpense}

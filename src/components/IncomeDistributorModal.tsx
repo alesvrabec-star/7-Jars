@@ -72,20 +72,24 @@ export const IncomeDistributorModal: React.FC<IncomeDistributorModalProps> = ({
   return (
     <div
       id="income-distributor-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-4 overflow-y-auto overscroll-contain"
+      style={{
+        paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0.75rem))',
+        paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0.75rem))',
+      }}
     >
-      <div className="relative w-full max-w-2xl bg-[#121214] rounded-2xl shadow-2xl border border-white/10 text-[#e5e5e7] overflow-hidden my-8">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#161618]/80">
+      <div className="relative w-full max-w-2xl bg-[#121214] rounded-2xl shadow-2xl border border-white/10 text-[#e5e5e7] flex flex-col max-h-[calc(100dvh-1.5rem)] sm:max-h-[88vh] overflow-hidden my-auto">
+        {/* Header - ALWAYS VISIBLE */}
+        <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/5 bg-[#161618]">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-[#d4af37]/15 text-[#d4af37] border border-[#d4af37]/30 rounded-xl shadow-xs">
-              <Sparkles className="w-5 h-5" />
+            <div className="p-2 sm:p-2.5 bg-[#d4af37]/15 text-[#d4af37] border border-[#d4af37]/30 rounded-xl shadow-xs shrink-0">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white tracking-wide">
+              <h2 className="text-sm sm:text-base font-semibold text-white tracking-wide">
                 Rozdělit měsíční příjem do 7 džbánů
               </h2>
-              <p className="text-xs text-white/40 font-normal">
+              <p className="text-[11px] sm:text-xs text-white/40 font-normal">
                 Zadejte čistou mzdu nebo příjem a nechte metodu 7 džbánů pracovat
               </p>
             </div>
@@ -93,13 +97,15 @@ export const IncomeDistributorModal: React.FC<IncomeDistributorModalProps> = ({
           <button
             id="btn-close-income-modal"
             onClick={onClose}
-            className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+            aria-label="Zavřít"
+            className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 overscroll-contain">
           {/* Income Input */}
           <div>
             <label
@@ -237,14 +243,15 @@ export const IncomeDistributorModal: React.FC<IncomeDistributorModalProps> = ({
               })}
             </div>
           </div>
+          </div>
 
-          {/* Action buttons */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/5">
+          {/* Action buttons - ALWAYS ACCESSIBLE */}
+          <div className="shrink-0 flex items-center justify-end gap-3 p-4 sm:px-6 bg-[#161618] border-t border-white/5">
             <button
               id="btn-cancel-distribute"
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 text-xs uppercase tracking-wider font-semibold text-white/50 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+              className="px-4 py-2.5 text-xs uppercase tracking-wider font-semibold text-white/50 hover:text-white hover:bg-white/5 rounded-xl transition-colors cursor-pointer"
             >
               Zrušit
             </button>
@@ -252,10 +259,10 @@ export const IncomeDistributorModal: React.FC<IncomeDistributorModalProps> = ({
               id="btn-confirm-distribute"
               type="submit"
               disabled={!is100 || income <= 0}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-[#0a0a0b] bg-gradient-to-r from-[#d4af37] to-[#c59e2b] hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl shadow-lg shadow-[#d4af37]/10 transition-all active:scale-[0.98]"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-bold text-[#0a0a0b] bg-gradient-to-r from-[#d4af37] to-[#c59e2b] hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl shadow-lg shadow-[#d4af37]/10 transition-all active:scale-[0.98] cursor-pointer"
             >
               <Sparkles className="w-4 h-4" />
-              Rozdělit {formatCZK(income)} do džbánů
+              <span>Rozdělit {formatCZK(income)} do džbánů</span>
             </button>
           </div>
         </form>

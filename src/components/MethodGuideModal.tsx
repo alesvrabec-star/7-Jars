@@ -17,20 +17,24 @@ export const MethodGuideModal: React.FC<MethodGuideModalProps> = ({
   return (
     <div
       id="method-guide-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-4 overflow-y-auto overscroll-contain"
+      style={{
+        paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0.75rem))',
+        paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0.75rem))',
+      }}
     >
-      <div className="relative w-full max-w-3xl bg-[#121214] rounded-2xl shadow-2xl border border-white/10 text-[#e5e5e7] overflow-hidden my-8">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-[#161618]/80">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-[#d4af37]/15 text-[#d4af37] border border-[#d4af37]/30 rounded-xl shadow-xs">
-              <BookOpen className="w-6 h-6" />
+      <div className="relative w-full max-w-3xl bg-[#121214] rounded-2xl shadow-2xl border border-white/10 text-[#e5e5e7] flex flex-col max-h-[calc(100dvh-1.5rem)] sm:max-h-[88vh] overflow-hidden my-auto">
+        {/* Header - ALWAYS VISIBLE */}
+        <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/5 bg-[#161618]">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="p-2 sm:p-2.5 bg-[#d4af37]/15 text-[#d4af37] border border-[#d4af37]/30 rounded-xl shadow-xs shrink-0">
+              <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white tracking-wide">
+              <h2 className="text-base sm:text-lg font-bold text-white tracking-wide">
                 Průvodce: Jak funguje metoda Sedmi džbánů
               </h2>
-              <p className="text-xs text-white/40 font-normal">
+              <p className="text-[11px] sm:text-xs text-white/40 font-normal">
                 Kompletní přehled principů, psychologie a praktického využití
               </p>
             </div>
@@ -38,14 +42,15 @@ export const MethodGuideModal: React.FC<MethodGuideModalProps> = ({
           <button
             id="btn-close-guide-modal"
             onClick={onClose}
-            className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+            aria-label="Zavřít"
+            className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-7 max-h-[75vh] overflow-y-auto text-white/80 text-sm">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 text-white/80 text-sm overscroll-contain">
           {/* Intro Box */}
           <div className="p-4 rounded-2xl bg-[#161618] border border-[#d4af37]/30 text-[#e5e5e7]">
             <h3 className="font-bold text-base text-white mb-1 flex items-center gap-2">
