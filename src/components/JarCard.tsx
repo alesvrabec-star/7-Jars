@@ -2,7 +2,7 @@ import React from 'react';
 import { Jar, JarId } from '../types';
 import { JarIcon } from './JarIcon';
 import { formatCZK } from '../utils/formatters';
-import { Plus, Minus, Info, ArrowRightLeft } from 'lucide-react';
+import { Plus, Minus, Info, ArrowRightLeft, TrendingUp } from 'lucide-react';
 
 interface JarCardProps {
   jar: Jar;
@@ -11,6 +11,7 @@ interface JarCardProps {
   onExpense: (jarId: JarId) => void;
   onTransfer: (jarId: JarId) => void;
   onShowDetail: (jar: Jar) => void;
+  onOpenFinancialIndependence?: () => void;
 }
 
 export const JarCard: React.FC<JarCardProps> = ({
@@ -20,6 +21,7 @@ export const JarCard: React.FC<JarCardProps> = ({
   onExpense,
   onTransfer,
   onShowDetail,
+  onOpenFinancialIndependence,
 }) => {
   const monthlyShare = Math.round((monthlyIncome * jar.percentage) / 100);
   
@@ -105,6 +107,24 @@ export const JarCard: React.FC<JarCardProps> = ({
           <span className="font-semibold text-[#d4af37]">Zásada: </span>
           {jar.goldenRule}
         </p>
+
+        {/* Smart Life Financial Independence Link for Freedom Jar */}
+        {jar.id === 'freedom' && onOpenFinancialIndependence && (
+          <button
+            id="btn-jar-freedom-fi"
+            type="button"
+            onClick={onOpenFinancialIndependence}
+            className="mt-2.5 w-full inline-flex items-center justify-between px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-xs text-emerald-300 font-semibold transition-all cursor-pointer group/fi"
+          >
+            <span className="flex items-center gap-1.5">
+              <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+              10 let k nezávislosti (Smart Life)
+            </span>
+            <span className="text-[11px] text-emerald-400 group-hover/fi:translate-x-0.5 transition-transform">
+              Plánovač →
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Action Buttons */}

@@ -30,15 +30,17 @@ export const IncomeDistributorModal: React.FC<IncomeDistributorModalProps> = ({
   const [percentages, setPercentages] = useState<Record<JarId, number>>(() => {
     const map: Record<string, number> = {};
     jars.forEach((j) => {
-      map[j.id] = j.percentage;
+      map[j.id] = j.enabled === false ? 0 : j.percentage;
     });
     return map as Record<JarId, number>;
   });
 
   if (!isOpen) return null;
 
-  const totalPercentage = (Object.values(percentages) as number[]).reduce(
-    (sum: number, val: number) => sum + (val || 0),
+  // Only sum active jars
+  const activeJars = jars.filter((j) => j.enabled !== false);
+  const totalPercentage = activeJars.reduce(
+    (sum: number, j) => sum + (percentages[j.id] || 0),
     0
   );
   const is100 = totalPercentage === 100;
@@ -52,7 +54,32 @@ export const IncomeDistributorModal: React.FC<IncomeDistributorModalProps> = ({
   };
 
   const applyPreset = (presetPercentages: Record<JarId, number>) => {
-    setPercentages({ ...presetPercentages });
+    const newPercentages = { ...presetPercentages };
+    // Zero out disabled jars
+    jars.forEach((j) => {
+      if (j.enabled === false) {
+        newPercentages[j.id] = 0;
+      }
+    });
+
+    // If some jars are disabled, proportionally normalize the active ones to 100%
+    const currentActiveSum = activeJars.reduce(
+      (sum, j) => sum + (newPercentages[j.id] || 0),
+      0
+    );
+    if (currentActiveSum > 0 && currentActiveSum !== 100) {
+      let remaining = 100;
+      activeJars.forEach((j) => {
+        const scaled = Math.round(((newPercentages[j.id] || 0) / currentActiveSum) * 100);
+        remaining -= scaled;
+        newPercentages[j.id] = scaled;
+      });
+      if (remaining !== 0 && activeJars.length > 0) {
+        newPercentages[activeJars[0].id] += remaining;
+      }
+    }
+
+    setPercentages(newPercentages);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -269,28 +296,42 @@ export const IncomeDistributorModal: React.FC<IncomeDistributorModalProps> = ({
 
             <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
               {jars.map((jar) => {
-                const pct = percentages[jar.id] ?? jar.percentage;
-                const allocatedKč = Math.round((income * pct) / 100);
+                const isEnabled = jar.enabled !== false;
+                const pct = isEnabled ? (percentages[jar.id] ?? jar.percentage) : 0;
+                const allocatedKč = isEnabled ? Math.round((income * pct) / 100) : 0;
                 const finalBalance =
                   distributionMode === 'fresh_month'
-                    ? allocatedKč
+                    ? (isEnabled ? allocatedKč : (jar.balance || 0))
                     : (jar.balance || 0) + allocatedKč;
 
                 return (
                   <div
                     key={jar.id}
-                    className="flex items-center justify-between gap-3 p-2.5 bg-[#161618] rounded-xl border border-white/5"
+                    className={`flex items-center justify-between gap-3 p-2.5 rounded-xl border transition-all ${
+                      isEnabled
+                        ? 'bg-[#161618] border-white/5'
+                        : 'bg-[#121214] border-white/5 opacity-50'
+                    }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className={`p-1.5 rounded-lg ${jar.theme.iconBg}`}>
+                      <div className={`p-1.5 rounded-lg ${isEnabled ? jar.theme.iconBg : 'bg-white/5 text-white/40 border border-white/10'}`}>
                         <JarIcon name={jar.icon} className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-semibold text-white truncate">
-                          {jar.name}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-semibold text-white truncate">
+                            {jar.name}
+                          </p>
+                          {!isEnabled && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-white/10 text-white/50 border border-white/10">
+                              Vypnuto v nastavení
+                            </span>
+                          )}
+                        </div>
                         <p className="text-[11px] text-white/40 truncate">
-                          {distributionMode === 'fresh_month' ? (
+                          {!isEnabled ? (
+                            <span>Zůstatek: {formatCZK(jar.balance || 0)} (džbán je deaktivován)</span>
+                          ) : distributionMode === 'fresh_month' ? (
                             <span>Výsledný stav: <strong className="text-emerald-400 font-semibold">{formatCZK(finalBalance)}</strong></span>
                           ) : (
                             <span>Původní {formatCZK(jar.balance)} + {formatCZK(allocatedKč)} = <strong className="text-emerald-400 font-semibold">{formatCZK(finalBalance)}</strong></span>
@@ -301,7 +342,7 @@ export const IncomeDistributorModal: React.FC<IncomeDistributorModalProps> = ({
 
                     <div className="flex items-center gap-3 shrink-0">
                       <div className="text-right">
-                        <p className="text-xs font-bold text-white">
+                        <p className={`text-xs font-bold ${isEnabled ? 'text-white' : 'text-white/40'}`}>
                           +{formatCZK(allocatedKč)}
                         </p>
                       </div>
@@ -312,11 +353,16 @@ export const IncomeDistributorModal: React.FC<IncomeDistributorModalProps> = ({
                           type="number"
                           min="0"
                           max="100"
+                          disabled={!isEnabled}
                           value={pct}
                           onChange={(e) =>
                             handlePercentageChange(jar.id, parseInt(e.target.value, 10))
                           }
-                          className="w-14 px-2 py-1 text-right text-xs font-bold bg-[#121214] text-white border border-white/10 rounded-lg focus:outline-none focus:border-[#d4af37]"
+                          className={`w-14 px-2 py-1 text-right text-xs font-bold border rounded-lg focus:outline-none focus:border-[#d4af37] ${
+                            isEnabled
+                              ? 'bg-[#121214] text-white border-white/10'
+                              : 'bg-white/5 text-white/30 border-white/5 cursor-not-allowed'
+                          }`}
                         />
                         <span className="text-xs font-semibold text-white/40">%</span>
                       </div>

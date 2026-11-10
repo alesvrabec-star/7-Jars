@@ -155,11 +155,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               onChange={(e) => setSelectedJarId(e.target.value as JarId)}
               className="w-full px-3.5 py-2.5 bg-[#161618] border border-white/10 rounded-xl text-sm font-medium text-white focus:outline-none focus:border-[#d4af37]"
             >
-              {jars.map((j) => (
-                <option key={j.id} value={j.id} className="bg-[#121214] text-white">
-                  {j.name} (zůstatek: {j.balance.toLocaleString('cs-CZ')} Kč)
-                </option>
-              ))}
+              {jars
+                .filter((j) => j.enabled !== false || j.id === selectedJarId || (j.balance || 0) > 0)
+                .map((j) => (
+                  <option key={j.id} value={j.id} className="bg-[#121214] text-white">
+                    {j.name} {j.enabled === false ? '(vypnutý)' : ''} (zůstatek: {j.balance.toLocaleString('cs-CZ')} Kč)
+                  </option>
+                ))}
             </select>
           </div>
 

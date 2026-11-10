@@ -174,4 +174,16 @@ export const FINANCIAL_TIPS: FinancialTip[] = [
     quote: 'Neříkejte mi, jaké jsou vaše priority. Ukažte mi, za co utrácíte peníze, a já vám řeknu, co je pro vás skutečně důležité.',
     author: 'James W. Frick',
   },
+  {
+    id: 29,
+    category: 'Investování',
+    quote: 'Až 80 % úspěchu při budování bohatství tvoří řízení osobních financí, rozpočet a míra úspor. Teprve na tomto základě dokáže investování do ETF fondů přinést skutečnou finanční svobodu do 10 let.',
+    author: 'Tomáš Pieružek, Smart Life (smart-life.sk)',
+  },
+  {
+    id: 30,
+    category: 'Investování',
+    quote: 'Pravidlo 4 %: Finanční svoboda nastává ve chvíli, kdy váš kapitál ve Džbánu svobody dosáhne 25násobku vašich ročních výdajů. Z nízkonákladových ETF fondů pak bezpečně čerpáte pasivní příjem.',
+    author: 'Pravidlo 4 % (FIRE & Trinity Study)',
+  },
 ];

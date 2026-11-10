@@ -19,6 +19,9 @@ import { MethodGuideModal } from './components/MethodGuideModal';
 import { TransactionHistory } from './components/TransactionHistory';
 import { AuthModal } from './components/AuthModal';
 import { RecurringExpensesModal } from './components/RecurringExpensesModal';
+import { SettingsModal } from './components/SettingsModal';
+import { FinancialIndependenceModal } from './components/FinancialIndependenceModal';
+import { FinancialCoachModal } from './components/FinancialCoachModal';
 import { FinancialWisdomBanner } from './components/FinancialWisdomBanner';
 import { useAuth } from './context/AuthContext';
 import {
@@ -30,7 +33,7 @@ import {
   saveRecurringExpensesToCloud,
   subscribeToUserCloudData,
 } from './services/firestoreSync';
-import { Cloud, ArrowRight, Repeat, RotateCcw, Calendar, X as CloseIcon, Sparkles } from 'lucide-react';
+import { Cloud, ArrowRight, Repeat, RotateCcw, Calendar, X as CloseIcon, Sparkles, Sliders, TrendingUp, Compass } from 'lucide-react';
 
 const STORAGE_KEYS = {
   JARS: 'seven_jars_data_v1',
@@ -112,6 +115,9 @@ export default function App() {
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [transferSourceJarId, setTransferSourceJarId] = useState<JarId | undefined>(undefined);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isFIOpen, setIsFIOpen] = useState(false);
+  const [isCoachOpen, setIsCoachOpen] = useState(false);
   const [detailJar, setDetailJar] = useState<Jar | null>(null);
 
   // Month notice and discrepancy banner state
@@ -687,12 +693,31 @@ export default function App() {
     }
   };
 
+  const handleSaveJarsFromSettings = async (updatedJars: Jar[]) => {
+    setJars(updatedJars);
+    localStorage.setItem(STORAGE_KEYS.JARS, JSON.stringify(updatedJars));
+
+    if (user) {
+      setIsSyncing(true);
+      try {
+        await saveJarsToCloud(user.uid, updatedJars);
+      } catch (err) {
+        console.error('Error saving updated jars to cloud:', err);
+      } finally {
+        setIsSyncing(false);
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0b] text-[#e5e5e7] flex flex-col selection:bg-[#d4af37]/20 selection:text-[#d4af37]">
       {/* Top Header */}
       <Header
         onOpenGuide={() => setIsGuideOpen(true)}
         onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenFinancialIndependence={() => setIsFIOpen(true)}
+        onOpenCoach={() => setIsCoachOpen(true)}
         isSyncing={isSyncing}
       />
 
@@ -838,49 +863,116 @@ export default function App() {
 
         {/* 7 Jars Grid */}
         <section id="jars-grid-section">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg sm:text-xl font-serif text-white tracking-tight">
-                Vašich 7 finančních džbánů
-              </h2>
-              <p className="text-xs text-white/40 font-normal">
-                Kliknutím na tlačítka můžete rychle evidovat výdaj, vklad nebo převod
-              </p>
-            </div>
+          {(() => {
+            const activeJars = jars.filter((j) => j.enabled !== false);
+            const disabledJars = jars.filter((j) => j.enabled === false);
 
-            <div className="flex items-center gap-2">
-              <button
-                id="btn-recurring-shortcut"
-                onClick={() => setIsRecurringOpen(true)}
-                className="text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-xl transition-all hidden sm:inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                <Repeat className="w-3.5 h-3.5 text-[#d4af37]" />
-                <span>Trvalé příkazy</span>
-              </button>
+            return (
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg sm:text-xl font-serif text-white tracking-tight">
+                        Vaše finanční džbány
+                      </h2>
+                      {disabledJars.length > 0 && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-[#d4af37]/15 text-[#d4af37] border border-[#d4af37]/30 font-semibold">
+                          {activeJars.length} z {jars.length} aktivních
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-white/40 font-normal mt-0.5">
+                      Kliknutím na tlačítka můžete rychle evidovat výdaj, vklad nebo převod
+                    </p>
+                  </div>
 
-              <button
-                id="btn-distribute-shortcut"
-                onClick={() => setIsDistributeOpen(true)}
-                className="text-xs font-semibold uppercase tracking-wider text-[#d4af37] hover:text-white bg-[#d4af37]/10 hover:bg-[#d4af37]/20 border border-[#d4af37]/30 px-3.5 py-1.5 rounded-xl transition-all hidden sm:inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                Rozdělit příjem
-              </button>
-            </div>
-          </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      id="btn-coach-shortcut"
+                      onClick={() => setIsCoachOpen(true)}
+                      title="Osobní finanční kouč Smart Life – Váš měsíční mentor"
+                      className="text-xs font-semibold uppercase tracking-wider text-[#d4af37] hover:text-white bg-[#d4af37]/15 hover:bg-[#d4af37]/25 border border-[#d4af37]/40 px-3.5 py-1.5 rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    >
+                      <Compass className="w-3.5 h-3.5 text-[#d4af37]" />
+                      <span>Finanční kouč</span>
+                    </button>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-            {jars.map((jar) => (
-              <JarCard
-                key={jar.id}
-                jar={jar}
-                monthlyIncome={monthlyIncome}
-                onDeposit={handleDepositQuick}
-                onExpense={handleExpenseQuick}
-                onTransfer={handleTransferQuick}
-                onShowDetail={(j) => setDetailJar(j)}
-              />
-            ))}
-          </div>
+                    <button
+                      id="btn-fi-shortcut"
+                      onClick={() => setIsFIOpen(true)}
+                      title="Plánovač 10leté finanční nezávislosti (Smart Life & 7 džbánů)"
+                      className="text-xs font-semibold uppercase tracking-wider text-emerald-400 hover:text-white bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 px-3.5 py-1.5 rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    >
+                      <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>10 let k nezávislosti</span>
+                    </button>
+
+                    <button
+                      id="btn-settings-shortcut"
+                      onClick={() => setIsSettingsOpen(true)}
+                      title="Spravovat a vybrat aktivní džbány"
+                      className="text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Sliders className="w-3.5 h-3.5 text-[#d4af37]" />
+                      <span>Nastavení džbánů</span>
+                    </button>
+
+                    <button
+                      id="btn-recurring-shortcut"
+                      onClick={() => setIsRecurringOpen(true)}
+                      className="text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-xl transition-all hidden sm:inline-flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Repeat className="w-3.5 h-3.5 text-[#d4af37]" />
+                      <span>Trvalé příkazy</span>
+                    </button>
+
+                    <button
+                      id="btn-distribute-shortcut"
+                      onClick={() => setIsDistributeOpen(true)}
+                      className="text-xs font-semibold uppercase tracking-wider text-[#d4af37] hover:text-white bg-[#d4af37]/10 hover:bg-[#d4af37]/20 border border-[#d4af37]/30 px-3.5 py-1.5 rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                    >
+                      Rozdělit příjem
+                    </button>
+                  </div>
+                </div>
+
+                {disabledJars.length > 0 && (
+                  <div className="mb-4 p-3 bg-[#161618] border border-white/10 rounded-xl flex items-center justify-between gap-3 text-xs text-white/60">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-2 h-2 rounded-full bg-white/30 shrink-0" />
+                      <span className="truncate">
+                        Vypnuté džbány ({disabledJars.length}):{' '}
+                        <strong className="text-white/80 font-medium">
+                          {disabledJars.map((j) => j.shortName).join(', ')}
+                        </strong>
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setIsSettingsOpen(true)}
+                      className="text-[#d4af37] hover:underline font-semibold cursor-pointer shrink-0"
+                    >
+                      Změnit
+                    </button>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+                  {activeJars.map((jar) => (
+                    <JarCard
+                      key={jar.id}
+                      jar={jar}
+                      monthlyIncome={monthlyIncome}
+                      onDeposit={handleDepositQuick}
+                      onExpense={handleExpenseQuick}
+                      onTransfer={handleTransferQuick}
+                      onShowDetail={(j) => setDetailJar(j)}
+                      onOpenFinancialIndependence={() => setIsFIOpen(true)}
+                    />
+                  ))}
+                </div>
+              </>
+            );
+          })()}
         </section>
 
         {/* Transaction History & Data Management */}
@@ -953,6 +1045,38 @@ export default function App() {
         recurringExpenses={recurringExpenses}
         onSaveExpenses={handleSaveRecurringExpenses}
         onExecuteExpenses={handleExecuteRecurringExpenses}
+      />
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        jars={jars}
+        onSaveJars={handleSaveJarsFromSettings}
+        onOpenTransfer={(fromJarId) => {
+          setSelectedJarForTx(fromJarId || 'necessities');
+          setIsTransferOpen(true);
+        }}
+      />
+
+      <FinancialIndependenceModal
+        isOpen={isFIOpen}
+        onClose={() => setIsFIOpen(false)}
+        jars={jars}
+        monthlyIncome={monthlyIncome}
+        onOpenCoach={() => {
+          setIsFIOpen(false);
+          setIsCoachOpen(true);
+        }}
+      />
+
+      <FinancialCoachModal
+        isOpen={isCoachOpen}
+        onClose={() => setIsCoachOpen(false)}
+        jars={jars}
+        monthlyIncome={monthlyIncome}
+        transactions={transactions}
+        currentMonthName={getMonthCzechName()}
+        onOpenDistribute={() => setIsDistributeOpen(true)}
       />
     </div>
   );

@@ -13,6 +13,7 @@ export interface Jar {
   shortName: string;
   percentage: number; // e.g. 50
   balance: number; // Current funds in jar (CZK)
+  enabled?: boolean; // Whether jar is active (defaults to true)
   colorKey: string;
   theme: {
     badgeBg: string;

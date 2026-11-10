@@ -110,11 +110,13 @@ export const TransferModal: React.FC<TransferModalProps> = ({
               onChange={(e) => setFromJarId(e.target.value as JarId)}
               className="w-full px-3.5 py-2.5 bg-[#161618] border border-white/10 rounded-xl text-sm font-medium text-white focus:outline-none focus:border-[#d4af37]"
             >
-              {jars.map((j) => (
-                <option key={j.id} value={j.id} className="bg-[#121214] text-white">
-                  {j.name} (zbývá: {j.balance.toLocaleString('cs-CZ')} Kč)
-                </option>
-              ))}
+              {jars
+                .filter((j) => j.enabled !== false || j.id === fromJarId || (j.balance || 0) > 0)
+                .map((j) => (
+                  <option key={j.id} value={j.id} className="bg-[#121214] text-white">
+                    {j.name} {j.enabled === false ? '(vypnutý)' : ''} (zbývá: {j.balance.toLocaleString('cs-CZ')} Kč)
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -133,10 +135,10 @@ export const TransferModal: React.FC<TransferModalProps> = ({
               className="w-full px-3.5 py-2.5 bg-[#161618] border border-white/10 rounded-xl text-sm font-medium text-white focus:outline-none focus:border-[#d4af37]"
             >
               {jars
-                .filter((j) => j.id !== fromJarId)
+                .filter((j) => j.id !== fromJarId && (j.enabled !== false || j.id === toJarId))
                 .map((j) => (
                   <option key={j.id} value={j.id} className="bg-[#121214] text-white">
-                    {j.name} (aktuálně: {j.balance.toLocaleString('cs-CZ')} Kč)
+                    {j.name} {j.enabled === false ? '(vypnutý)' : ''} (aktuálně: {j.balance.toLocaleString('cs-CZ')} Kč)
                   </option>
                 ))}
             </select>
