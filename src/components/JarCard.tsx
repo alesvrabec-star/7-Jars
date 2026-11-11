@@ -128,30 +128,30 @@ export const JarCard: React.FC<JarCardProps> = ({
       </div>
 
       {/* Action Buttons */}
-      <div className="px-5 py-3 bg-[#161618]/90 border-t border-white/5 flex items-center justify-between gap-2">
+      <div className="px-4 sm:px-5 py-2.5 sm:py-3 bg-[#161618]/90 border-t border-white/5 flex items-center justify-between gap-2">
         <button
           id={`btn-expense-${jar.id}`}
           onClick={() => onExpense(jar.id)}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-all"
+          className="flex-1 inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-2 sm:py-2.5 text-xs font-semibold rounded-xl text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 active:bg-rose-500/30 border border-rose-500/20 transition-all cursor-pointer"
         >
-          <Minus className="w-3.5 h-3.5" />
-          Výdaj
+          <Minus className="w-3.5 h-3.5 shrink-0" />
+          <span>Výdaj</span>
         </button>
 
         <button
           id={`btn-deposit-${jar.id}`}
           onClick={() => onDeposit(jar.id)}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all"
+          className="flex-1 inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-2 sm:py-2.5 text-xs font-semibold rounded-xl text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 active:bg-emerald-500/30 border border-emerald-500/20 transition-all cursor-pointer"
         >
-          <Plus className="w-3.5 h-3.5" />
-          Vložit
+          <Plus className="w-3.5 h-3.5 shrink-0" />
+          <span>Vložit</span>
         </button>
 
         <button
           id={`btn-transfer-${jar.id}`}
           onClick={() => onTransfer(jar.id)}
           title="Převést do jiného džbánu"
-          className="p-2 text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all"
+          className="p-2 sm:p-2.5 text-white/70 hover:text-white bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/10 rounded-xl transition-all cursor-pointer shrink-0"
         >
           <ArrowRightLeft className="w-3.5 h-3.5" />
         </button>

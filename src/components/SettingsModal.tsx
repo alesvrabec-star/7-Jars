@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Jar, JarId } from '../types';
 import { formatCZK } from '../utils/formatters';
 import { JarIcon } from './JarIcon';
-import { X, Sliders, Check, AlertCircle, ArrowRightLeft, Sparkles, Power, CheckCircle2 } from 'lucide-react';
+import { X, Sliders, Check, AlertCircle, ArrowRightLeft, Sparkles, Power, CheckCircle2, Coins } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -10,6 +10,7 @@ interface SettingsModalProps {
   jars: Jar[];
   onSaveJars: (updatedJars: Jar[]) => void;
   onOpenTransfer?: (fromJarId?: JarId) => void;
+  onOpenInitialBalances?: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -18,6 +19,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   jars,
   onSaveJars,
   onOpenTransfer,
+  onOpenInitialBalances,
 }) => {
   const [localJars, setLocalJars] = useState<Jar[]>([]);
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -148,6 +150,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </span>
             </div>
           </div>
+
+          {/* Migration / Initial balances banner */}
+          {onOpenInitialBalances && (
+            <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-[#18181b] to-[#121214] border border-[#d4af37]/35 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-[#d4af37]/15 text-[#d4af37] border border-[#d4af37]/30 shrink-0">
+                  <Coins className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white tracking-wide">
+                    Přecházíte z jiné aplikace nebo chcete upravit počáteční stav?
+                  </h4>
+                  <p className="text-[11px] text-white/50 mt-0.5 leading-relaxed">
+                    Nastavte si dosavadní naspořené částky pro každý džbán zvlášť, abyste mohli plynule pokračovat.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                id="btn-settings-to-initial-balances"
+                onClick={() => {
+                  onClose();
+                  onOpenInitialBalances();
+                }}
+                className="px-3.5 py-2 text-xs font-bold text-[#0a0a0b] bg-gradient-to-r from-[#d4af37] to-[#c59e2b] hover:brightness-110 rounded-xl transition-all cursor-pointer whitespace-nowrap self-start sm:self-auto shrink-0 shadow-sm"
+              >
+                Nastavit počáteční stav džbánů
+              </button>
+            </div>
+          )}
 
           {/* List of 7 Jars with Toggles */}
           <div className="space-y-2.5">

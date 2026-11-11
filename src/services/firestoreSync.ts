@@ -138,11 +138,25 @@ export async function saveRecurringExpensesToCloud(
 ): Promise<void> {
   if (!userId) return;
   try {
+    const recurringCol = collection(db, 'users', userId, 'recurring_expenses');
+    const existingSnap = await getDocs(recurringCol);
+    const incomingIds = new Set(expenses.map((e) => e.id));
+
     const batch = writeBatch(db);
+
+    // Delete documents that were removed from the expenses list
+    existingSnap.forEach((docSnap) => {
+      if (!incomingIds.has(docSnap.id)) {
+        batch.delete(docSnap.ref);
+      }
+    });
+
+    // Set or update remaining expenses
     expenses.forEach((exp) => {
       const expDoc = doc(db, 'users', userId, 'recurring_expenses', exp.id);
       batch.set(expDoc, { ...exp, updatedAt: new Date().toISOString() }, { merge: true });
     });
+
     await batch.commit();
   } catch (error) {
     console.error('Error saving recurring expenses to Firestore:', error);

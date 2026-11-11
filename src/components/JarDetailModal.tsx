@@ -2,7 +2,7 @@ import React from 'react';
 import { Jar, Transaction } from '../types';
 import { JarIcon } from './JarIcon';
 import { formatCZK, formatDateCS } from '../utils/formatters';
-import { X, CheckCircle, ShieldCheck, ArrowDownRight, ArrowUpRight, ArrowRightLeft } from 'lucide-react';
+import { X, CheckCircle, ShieldCheck, ArrowDownRight, ArrowUpRight, ArrowRightLeft, Coins } from 'lucide-react';
 
 interface JarDetailModalProps {
   jar: Jar | null;
@@ -10,6 +10,7 @@ interface JarDetailModalProps {
   transactions: Transaction[];
   onAddExpense: (jarId: Jar['id']) => void;
   onAddDeposit: (jarId: Jar['id']) => void;
+  onOpenInitialBalances?: () => void;
 }
 
 export const JarDetailModal: React.FC<JarDetailModalProps> = ({
@@ -18,6 +19,7 @@ export const JarDetailModal: React.FC<JarDetailModalProps> = ({
   transactions,
   onAddExpense,
   onAddDeposit,
+  onOpenInitialBalances,
 }) => {
   if (!jar) return null;
 
@@ -75,7 +77,7 @@ export const JarDetailModal: React.FC<JarDetailModalProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 id="btn-detail-expense"
                 onClick={() => {
@@ -96,6 +98,20 @@ export const JarDetailModal: React.FC<JarDetailModalProps> = ({
               >
                 + Vložit peníze
               </button>
+              {onOpenInitialBalances && (
+                <button
+                  id="btn-detail-adjust-balance"
+                  onClick={() => {
+                    onClose();
+                    onOpenInitialBalances();
+                  }}
+                  title="Upravit počáteční nebo aktuální stav tohoto i ostatních džbánů"
+                  className="px-3 py-2 text-xs font-semibold rounded-xl text-white/70 hover:text-[#d4af37] bg-white/5 hover:bg-white/10 border border-white/10 transition-colors inline-flex items-center gap-1.5"
+                >
+                  <Coins className="w-3.5 h-3.5 text-[#d4af37]" />
+                  <span>Upravit stav</span>
+                </button>
+              )}
             </div>
           </div>
 

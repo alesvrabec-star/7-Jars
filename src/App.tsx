@@ -22,6 +22,9 @@ import { RecurringExpensesModal } from './components/RecurringExpensesModal';
 import { SettingsModal } from './components/SettingsModal';
 import { FinancialIndependenceModal } from './components/FinancialIndependenceModal';
 import { FinancialCoachModal } from './components/FinancialCoachModal';
+import { FinancialIndependenceBar } from './components/FinancialIndependenceBar';
+import { InitialBalancesModal } from './components/InitialBalancesModal';
+import { MobileNavDock } from './components/MobileNavDock';
 import { FinancialWisdomBanner } from './components/FinancialWisdomBanner';
 import { useAuth } from './context/AuthContext';
 import {
@@ -31,9 +34,10 @@ import {
   deleteTransactionFromCloud,
   saveMonthlyIncomeToCloud,
   saveRecurringExpensesToCloud,
+  deleteRecurringExpenseFromCloud,
   subscribeToUserCloudData,
 } from './services/firestoreSync';
-import { Cloud, ArrowRight, Repeat, RotateCcw, Calendar, X as CloseIcon, Sparkles, Sliders, TrendingUp, Compass } from 'lucide-react';
+import { Cloud, ArrowRight, Repeat, RotateCcw, Calendar, X as CloseIcon, Sparkles, Sliders, TrendingUp, Compass, Coins } from 'lucide-react';
 
 const STORAGE_KEYS = {
   JARS: 'seven_jars_data_v1',
@@ -118,6 +122,7 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isFIOpen, setIsFIOpen] = useState(false);
   const [isCoachOpen, setIsCoachOpen] = useState(false);
+  const [isInitialBalancesOpen, setIsInitialBalancesOpen] = useState(false);
   const [detailJar, setDetailJar] = useState<Jar | null>(null);
 
   // Month notice and discrepancy banner state
@@ -186,7 +191,7 @@ export default function App() {
             setMonthlyIncome(cloudIncome);
           },
           onRecurringExpensesUpdate: (cloudExpenses) => {
-            if (cloudExpenses && cloudExpenses.length > 0) {
+            if (Array.isArray(cloudExpenses)) {
               setRecurringExpenses(cloudExpenses);
             }
           },
@@ -521,12 +526,30 @@ export default function App() {
   // Recurring Expenses Handlers
   const handleSaveRecurringExpenses = async (updated: RecurringExpense[]) => {
     setRecurringExpenses(updated);
+    localStorage.setItem(STORAGE_KEYS.RECURRING, JSON.stringify(updated));
     if (user) {
       setIsSyncing(true);
       try {
         await saveRecurringExpensesToCloud(user.uid, updated);
       } catch (err) {
         console.error('Error saving recurring expenses to cloud:', err);
+      } finally {
+        setIsSyncing(false);
+      }
+    }
+  };
+
+  const handleDeleteRecurringExpense = async (id: string) => {
+    const updated = recurringExpenses.filter((e) => e.id !== id);
+    setRecurringExpenses(updated);
+    localStorage.setItem(STORAGE_KEYS.RECURRING, JSON.stringify(updated));
+
+    if (user) {
+      setIsSyncing(true);
+      try {
+        await deleteRecurringExpenseFromCloud(user.uid, id);
+      } catch (err) {
+        console.error('Error deleting recurring expense from cloud:', err);
       } finally {
         setIsSyncing(false);
       }
@@ -709,6 +732,61 @@ export default function App() {
     }
   };
 
+  const handleSaveInitialBalances = async (
+    updatedBalances: Record<JarId, number>,
+    logTransaction: boolean,
+    transactionNote?: string
+  ) => {
+    const previousTotal = jars.reduce((sum, j) => sum + (j.balance || 0), 0);
+    const updatedJars = jars.map((j) => {
+      if (updatedBalances[j.id] !== undefined) {
+        return {
+          ...j,
+          balance: Math.max(0, updatedBalances[j.id]),
+        };
+      }
+      return j;
+    });
+
+    const newTotal = updatedJars.reduce((sum, j) => sum + (j.balance || 0), 0);
+    const delta = newTotal - previousTotal;
+
+    setJars(updatedJars);
+    localStorage.setItem(STORAGE_KEYS.JARS, JSON.stringify(updatedJars));
+
+    let newTx: Transaction | null = null;
+    if (logTransaction) {
+      const today = new Date().toISOString().split('T')[0];
+      newTx = {
+        id: `tx-initial-${Date.now()}`,
+        date: today,
+        timestamp: Date.now(),
+        amount: Math.abs(delta),
+        type: delta >= 0 ? 'manual_deposit' : 'expense',
+        jarId: 'freedom',
+        category: 'Počáteční stav',
+        note:
+          transactionNote ||
+          `Nastavení počátečního stavu džbánů (celkem ${formatCZK(newTotal)})`,
+      };
+      setTransactions((prev) => [newTx!, ...prev]);
+    }
+
+    if (user) {
+      setIsSyncing(true);
+      try {
+        await Promise.all([
+          saveJarsToCloud(user.uid, updatedJars),
+          newTx ? saveTransactionToCloud(user.uid, newTx) : Promise.resolve(),
+        ]);
+      } catch (err) {
+        console.error('Error saving initial balances to cloud:', err);
+      } finally {
+        setIsSyncing(false);
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0b] text-[#e5e5e7] flex flex-col selection:bg-[#d4af37]/20 selection:text-[#d4af37]">
       {/* Top Header */}
@@ -722,7 +800,7 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 sm:space-y-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 pb-24 sm:pb-12 space-y-5 sm:space-y-7">
         {/* Dynamic Financial Wisdom & Tip */}
         <FinancialWisdomBanner />
 
@@ -858,7 +936,16 @@ export default function App() {
           onOpenGuide={() => setIsGuideOpen(true)}
           onOpenRecurring={() => setIsRecurringOpen(true)}
           onResetJarsToZero={handleResetJarsToZero}
+          onOpenInitialBalances={() => setIsInitialBalancesOpen(true)}
           recurringCount={recurringExpenses.filter((e) => e.active).length}
+        />
+
+        {/* Visual Financial Independence Indicator (Pravidlo 4 %) */}
+        <FinancialIndependenceBar
+          jars={jars}
+          monthlyIncome={monthlyIncome}
+          onOpenFinancialIndependence={() => setIsFIOpen(true)}
+          onOpenCoach={() => setIsCoachOpen(true)}
         />
 
         {/* 7 Jars Grid */}
@@ -915,6 +1002,16 @@ export default function App() {
                     >
                       <Sliders className="w-3.5 h-3.5 text-[#d4af37]" />
                       <span>Nastavení džbánů</span>
+                    </button>
+
+                    <button
+                      id="btn-initial-balances-shortcut"
+                      onClick={() => setIsInitialBalancesOpen(true)}
+                      title="Nastavit počáteční nebo aktuální stav džbánů (přechod z jiné aplikace)"
+                      className="text-xs font-semibold uppercase tracking-wider text-[#d4af37] hover:text-white bg-[#d4af37]/10 hover:bg-[#d4af37]/20 border border-[#d4af37]/35 px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Coins className="w-3.5 h-3.5 text-[#d4af37]" />
+                      <span>Počáteční stav</span>
                     </button>
 
                     <button
@@ -1031,6 +1128,10 @@ export default function App() {
         transactions={transactions}
         onAddExpense={handleExpenseQuick}
         onAddDeposit={handleDepositQuick}
+        onOpenInitialBalances={() => {
+          setDetailJar(null);
+          setIsInitialBalancesOpen(true);
+        }}
       />
 
       <MethodGuideModal
@@ -1044,6 +1145,7 @@ export default function App() {
         jars={jars}
         recurringExpenses={recurringExpenses}
         onSaveExpenses={handleSaveRecurringExpenses}
+        onDeleteExpense={handleDeleteRecurringExpense}
         onExecuteExpenses={handleExecuteRecurringExpenses}
       />
 
@@ -1056,6 +1158,17 @@ export default function App() {
           setSelectedJarForTx(fromJarId || 'necessities');
           setIsTransferOpen(true);
         }}
+        onOpenInitialBalances={() => {
+          setIsSettingsOpen(false);
+          setIsInitialBalancesOpen(true);
+        }}
+      />
+
+      <InitialBalancesModal
+        isOpen={isInitialBalancesOpen}
+        onClose={() => setIsInitialBalancesOpen(false)}
+        jars={jars}
+        onSaveBalances={handleSaveInitialBalances}
       />
 
       <FinancialIndependenceModal
@@ -1077,6 +1190,18 @@ export default function App() {
         transactions={transactions}
         currentMonthName={getMonthCzechName()}
         onOpenDistribute={() => setIsDistributeOpen(true)}
+      />
+
+      {/* Mobile Sticky Quick Navigation Dock */}
+      <MobileNavDock
+        onOpenDistribute={() => setIsDistributeOpen(true)}
+        onOpenExpense={() => {
+          setSelectedJarForTx('necessities');
+          setTransactionType('expense');
+          setIsTransactionOpen(true);
+        }}
+        onOpenCoach={() => setIsCoachOpen(true)}
+        onOpenFinancialIndependence={() => setIsFIOpen(true)}
       />
     </div>
   );

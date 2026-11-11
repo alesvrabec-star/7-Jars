@@ -28,6 +28,7 @@ interface RecurringExpensesModalProps {
   jars: Jar[];
   recurringExpenses: RecurringExpense[];
   onSaveExpenses: (expenses: RecurringExpense[]) => Promise<void> | void;
+  onDeleteExpense?: (id: string) => Promise<void> | void;
   onExecuteExpenses: (
     selectedExpenses: RecurringExpense[],
     date: string,
@@ -53,6 +54,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
   jars,
   recurringExpenses,
   onSaveExpenses,
+  onDeleteExpense,
   onExecuteExpenses,
 }) => {
   // Current active tab: 'import' (zaúčtovat) or 'manage' (správa)
@@ -177,8 +179,20 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
 
   const handleDeleteExpense = async (id: string) => {
     const updated = recurringExpenses.filter((e) => e.id !== id);
-    await onSaveExpenses(updated);
     setSelectedIds((prev) => prev.filter((item) => item !== id));
+
+    if (onDeleteExpense) {
+      await onDeleteExpense(id);
+    } else {
+      await onSaveExpenses(updated);
+    }
+  };
+
+  const handleDeleteAllExpenses = async () => {
+    if (window.confirm('Opravdu chcete smazat všechny trvalé příkazy ze seznamu?')) {
+      setSelectedIds([]);
+      await onSaveExpenses([]);
+    }
   };
 
   const handleToggleExpenseActive = async (id: string) => {
@@ -704,12 +718,34 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
 
             {/* List of current expenses */}
             <div>
-              <h4 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-3">
-                Uložené trvalé příkazy ({recurringExpenses.length})
-              </h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-xs font-semibold text-white/50 uppercase tracking-wider">
+                  Uložené trvalé příkazy ({recurringExpenses.length})
+                </h4>
+                {recurringExpenses.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleDeleteAllExpenses}
+                    className="text-[11px] font-medium text-rose-400/80 hover:text-rose-400 hover:underline cursor-pointer transition-colors"
+                  >
+                    Smazat vše
+                  </button>
+                )}
+              </div>
 
               {recurringExpenses.length === 0 ? (
-                <p className="text-xs text-white/40 italic">Zatím nejsou uloženy žádné trvalé příkazy.</p>
+                <div className="p-5 text-center bg-[#161618] rounded-xl border border-dashed border-white/10 space-y-2">
+                  <p className="text-xs text-white/50">
+                    Nemáte uloženy žádné trvalé příkazy.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleLoadSampleExpenses}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#d4af37] bg-[#d4af37]/10 hover:bg-[#d4af37]/20 border border-[#d4af37]/30 rounded-lg transition-all cursor-pointer"
+                  >
+                    + Načíst vzorové platby
+                  </button>
+                </div>
               ) : (
                 <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                   {recurringExpenses.map((expense) => {
@@ -724,7 +760,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                             type="button"
                             onClick={() => handleToggleExpenseActive(expense.id)}
                             title={expense.active ? 'Aktivní (kliknutím pozastavit)' : 'Pozastaveno (kliknutím aktivovat)'}
-                            className={`px-2 py-1 text-[10px] font-bold rounded-lg border transition-all ${
+                            className={`px-2 py-1 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${
                               expense.active
                                 ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
                                 : 'bg-white/5 border-white/10 text-white/40'
@@ -745,16 +781,20 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                         </div>
 
                         <div className="flex items-center gap-3 shrink-0">
-                          <span className="text-xs sm:text-sm font-bold text-white">
+                          <span className="text-xs sm:text-sm font-bold text-white tabular-nums">
                             {formatCZK(expense.amount)}
                           </span>
                           <button
                             type="button"
-                            onClick={() => handleDeleteExpense(expense.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteExpense(expense.id);
+                            }}
                             title="Smazat trvalý příkaz"
-                            className="p-1.5 text-white/30 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                            aria-label={`Smazat ${expense.name}`}
+                            className="p-2 text-white/40 hover:text-rose-400 hover:bg-rose-500/15 rounded-lg transition-all cursor-pointer active:scale-95"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>

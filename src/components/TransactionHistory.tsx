@@ -53,7 +53,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   const getJar = (id: JarId) => jars.find((j) => j.id === id);
 
   return (
-    <div id="transaction-history-section" className="bg-[#121214] rounded-2xl border border-white/10 shadow-2xl p-5 sm:p-6">
+    <div id="transaction-history-section" className="bg-[#121214] rounded-2xl border border-white/10 shadow-2xl p-4 sm:p-6">
       {/* Header & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-white/5">
         <div>

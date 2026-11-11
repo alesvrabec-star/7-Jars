@@ -21,6 +21,7 @@ import {
   HelpCircle,
   BookOpen,
   ChevronRight,
+  Search,
 } from 'lucide-react';
 
 interface FinancialIndependenceModalProps {
@@ -30,6 +31,185 @@ interface FinancialIndependenceModalProps {
   monthlyIncome: number;
   onOpenCoach?: () => void;
 }
+
+export interface MetricExplanation {
+  id: string;
+  title: string;
+  shortName: string;
+  category: string;
+  summary: string;
+  details: string;
+  formula?: string;
+  example?: string;
+  tip: string;
+}
+
+export const METRIC_EXPLANATIONS: Record<string, MetricExplanation> = {
+  fiNumber: {
+    id: 'fiNumber',
+    title: 'Číslo finanční svobody (Cílový kapitál)',
+    shortName: 'Cílový kapitál',
+    category: 'Cílová metrika',
+    summary: 'Celkový investiční majetek, který potřebujete nashromáždit, abyste mohli žít z pasivního příjmu bez nutnosti chodit do práce.',
+    details: 'Vychází z celosvětově prověřeného pravidla 4 % (Trinity Study). Z této sumy můžete každoročně vybírat 4 % na veškeré životní náklady, a zbývající výnosy pokryjí inflaci, takže vám kapitál nikdy nedojde.',
+    formula: 'Cílový kapitál = Roční životní náklady × 25 = Měsíční náklady × 300',
+    example: 'Pokud na život potřebujete 25 000 Kč měsíčně (= 300 000 Kč ročně), vaše Číslo svobody je 7 500 000 Kč.',
+    tip: 'Nejprve zamiřte na vykrytí Džbánu nutností (základní potřeby). Až dosáhnete tohoto milníku, budete mít klid a můžete svobodu dále navyšovat.',
+  },
+  passiveIncome10y: {
+    id: 'passiveIncome10y',
+    title: 'Pasivní příjem za 10 let',
+    shortName: 'Měsíční pasivní příjem',
+    category: 'Měsíční renta',
+    summary: 'Měsíční částka v Kč, kterou vám portfolio bude spolehlivě vyplácet po 10 letech investování.',
+    details: 'Počítá se jako bezpečný roční výběr 4 % z celkové budoucí hodnoty portfolia rozdělený na 12 měsíců. Tyto peníze představují vaši měsíční rentu bez nutnosti sahat na podstatu kapitálu.',
+    formula: 'Měsíční pasivní příjem = (Hodnota portfolia za 10 let × 0,04) ÷ 12',
+    example: 'Při naspořených 3 000 000 Kč činí bezpečný pasivní příjem 10 000 Kč každý měsíc.',
+    tip: 'Každá koruna pasivního příjmu nahrazuje nutnost prodávat svůj čas v zaměstnání a zvyšuje vaši osobní svobodu.',
+  },
+  totalBalance10y: {
+    id: 'totalBalance10y',
+    title: 'Naspořeno a zhodnoceno (Celkový majetek)',
+    shortName: 'Celkový majetek za 10 let',
+    category: 'Stav portfolia',
+    summary: 'Odhadovaná celková hodnota vašeho Džbánu svobody po 10 letech složeného úročení.',
+    details: 'Je to součet všech vašich vlastních pravidelných vkladů a čistého zisku ze zhodnocení ETF fondů. Tento majetek je vaše „zlatá slepice“, která snáší pasivní příjem.',
+    formula: 'Celkový majetek = Vlastní vklady + Zisk ze složeného úročení',
+    example: 'Z celkových 2 000 000 Kč může být 600 000 Kč váš vklad a 1 400 000 Kč čistý výnos trhů.',
+    tip: 'Tento majetek nikdy neutrácíte za spotřebu. Držíte jej zainvestovaný v ETF, odkud čerpáte pouze roční výnos.',
+  },
+  timeToTarget: {
+    id: 'timeToTarget',
+    title: 'Čas do dosažení cíle (Horizont nezávislosti)',
+    shortName: 'Čas do cíle',
+    category: 'Časový horizont',
+    summary: 'Přesný počet let a měsíců, za jak dlouho při vašem tempu vkladů a zhodnocení dosáhnete 100% finanční nezávislosti.',
+    details: 'Model počítá měsíc po měsíci s vaším počátečním stavem, měsíčními vklady a ročním výnosem ETF fondů. Zobrazuje, jak se horizont dramaticky zkracuje při vyšším zhodnocení.',
+    formula: 'Měsíční simulace: Kapitál(m) = Kapitál(m-1) × (1 + r/12) + Vklad, dokud Kapitál >= Cíl',
+    example: 'Zvýšením výnosu z 5 % na 8,5 % můžete zkrátit dobu ze 22 let na 14 let – ušetříte 8 let povinné práce!',
+    tip: 'Dva největší urychlovače: Zvýšit měsíční vklad do Džbánu svobody a investovat do indexových ETF místo spořicích účtů.',
+  },
+  annualReturnRate: {
+    id: 'annualReturnRate',
+    title: 'Očekávaný roční výnos ETF investic (p.a.)',
+    shortName: 'Roční výnos (p.a.)',
+    category: 'Investiční parametr',
+    summary: 'Průměrné roční procentuální zhodnocení portfolia po odečtení poplatků (p.a. = per annum, ročně).',
+    details: 'Na spořicím účtu dosáhnete 2–4 %, v konzervativních dluhopisech 4–5 %, v globálních ETF 7 % a v americkém indexu S&P 500 historicky 8–10 % p.a. Každé procento navíc má díky složenému úročení obrovský vliv.',
+    example: 'Rozdíl mezi 5 % a 8,5 % ročně může na 10letém horizontu znamenat stovky tisíc až miliony korun čistého zisku navíc.',
+    tip: 'Akciové trhy v jednotlivých letech kolísají, ale v horizontu 10+ let je průměrný výnos širokých indexů překvapivě stabilní.',
+  },
+  etfStrategies: {
+    id: 'etfStrategies',
+    title: 'Strategie ETF fondů (Přednastavené profily)',
+    shortName: 'ETF Strategie',
+    category: 'Investiční nástroje',
+    summary: 'Možnosti zhodnocení od konzervativního mixu (5 %) po růstové technologické indexy (11 %).',
+    details: 'Indexové ETF fondy nakupují stovky až tisíce největších světových společností najednou s minimálními poplatky (typicky 0,05–0,2 % ročně). Jsou základním stavebním kamenem Smart Life.',
+    example: 'S&P 500 zahrnuje 500 nejvýznamnějších firem USA, MSCI World více než 1 500 firem z 23 rozvinutých zemí.',
+    tip: 'Pro začátečníky je ideální volbou globální ETF (MSCI World) nebo americký S&P 500 v akumulační verzi (Acc) s automatickým reinvestováním dividend.',
+  },
+  timeSaved: {
+    id: 'timeSaved',
+    title: 'Zkrácení cesty k finanční nezávislosti',
+    shortName: 'Ušetřené roky',
+    category: 'Přínos strategie',
+    summary: 'Kolik let a měsíců života ušetříte díky vyššímu zhodnocení ETF fondů ve srovnání s konzervativní strategií (5 % p.a.).',
+    details: 'Ukazuje přímou hodnotu investování do kvalitních ETF. Nevyděláváte jen virtuální peníze v aplikaci – získáváte reálné roky volného času, které byste jinak museli strávit v práci.',
+    formula: 'Ušetřený čas = Doba při konzervativním výnosu (5 %) - Doba při vašem zvoleném výnosu',
+    example: 'Ušetříte 6 let a 4 měsíce – to je přes 6 let svobodného života bez nutnosti pracovat pro obživu.',
+    tip: 'Peníze se dají vydělat znovu, čas ne. Rychlejší cesta k nezávislosti vám vrací vaše nejcennější aktivum – čas.',
+  },
+  extraGains: {
+    id: 'extraGains',
+    title: 'Navýšení zisku za 10 let',
+    shortName: 'Zisk navíc z ETF',
+    category: 'Složené úročení',
+    summary: 'Čistý finanční zisk navíc, který vám vygeneruje vyšší zhodnocení oproti konzervativnímu spoření, při stejném vkladu.',
+    details: 'Rozdíl mezi výsledným kapitálem při vašem zadaném zhodnocení a kapitálem při konzervativním 5% výnosu. Peníze vznikají tím, že dřívější zisky samy plodí další zisky.',
+    example: 'Při vkladu 5 000 Kč/měsíc přinese výnos 8,5 % p.a. oproti 5 % p.a. více než 200 000 Kč čistého zisku navíc.',
+    tip: 'Tyto peníze navíc nevyžadují žádnou práci přesčas – pracují pro vás peníze samy.',
+  },
+  monthlyInvestment: {
+    id: 'monthlyInvestment',
+    title: 'Měsíční investice do FFA (Džbán svobody)',
+    shortName: 'Měsíční vklad',
+    category: 'Pravidelný vklad',
+    summary: 'Částka, kterou každý měsíc pravidelně odesíláte ze své výplaty do investičních ETF fondů.',
+    details: 'Metoda Sedmi džbánů doporučuje minimálně 10 % z čistého měsíčního příjmu (Financial Freedom Account - FFA). Zásadou je „zaplať nejdříve sobě samému“ – trvalý příkaz hned den po výplatě.',
+    example: 'Při příjmu 45 000 Kč je základní doporučený vklad 10 % = 4 500 Kč měsíčně.',
+    tip: 'Pravidelnost a automatizace je důležitější než pokusy o časování trhu. I malá částka posílaná každý měsíc vytvoří za 10 let obrovský majetek.',
+  },
+  targetMonthlyPassive: {
+    id: 'targetMonthlyPassive',
+    title: 'Cílový pasivní příjem (Životní náklady)',
+    shortName: 'Cílové měsíční náklady',
+    category: 'Cílový rozpočet',
+    summary: 'Výše měsíční renty, kterou potřebujete pro pokrytí svého života bez nutnosti pracovat.',
+    details: 'Představuje vaše měsíční výdaje v dnešních cenách. Můžete zvolit buď základní nutnosti (Džbán nutností, cca 50 % příjmu), nebo kompletní rozpočet včetně zábavy.',
+    example: 'Při 25 000 Kč měsíčně vám pasivní příjem zaplatí bydlení, jídlo i běžné účty.',
+    tip: 'Čím skromnější jsou vaše nutné výdaje, tím dříve jste finančně svobodní. Zbytečné spotřební dluhy cíl oddalují.',
+  },
+  safeWithdrawalRate: {
+    id: 'safeWithdrawalRate',
+    title: 'Pravidlo bezpečného výběru (Pravidlo 4 % / SWR)',
+    shortName: 'Pravidlo 4 %',
+    category: 'Pravidlo čerpání',
+    summary: 'Maximální procento portfolia, které můžete ročně utratit, aby vám kapitál nikdy nedošel.',
+    details: 'Vychází z historické studie Trinity Study. Široký akciový trh dlouhodobě roste o 7–10 % p.a. Pokud vyberete 4 %, zbývající procenta pokryjí inflaci i propady trhů.',
+    formula: 'Roční výběr = 4 % z celkového portfolia (tj. Portfolio ÷ 25)',
+    example: 'Z portfolia 10 000 000 Kč je bezpečný roční výběr 400 000 Kč (cca 33 333 Kč měsíčně).',
+    tip: 'V krizových letech, kdy trhy klesají, je dobré výběry mírně omezit a využít nouzovou rezervu.',
+  },
+  autoSync: {
+    id: 'autoSync',
+    title: 'Propojení se džbánem Svoboda (Auto-Sync)',
+    shortName: 'Propojení s rozpočtem',
+    category: 'Nastavení modelu',
+    summary: 'Automatické načítání skutečných zůstatků a příjmu z vašeho rozpočtu v aplikaci.',
+    details: 'Když je zapnuto, kalkulačka automaticky pracuje s vaším reálným zůstatkem ve Džbánu svobody, nastaveným procentem a příjmem. Po vypnutí můžete zkoušet libovolné hypotetické částky.',
+    tip: 'Nechte zapnuté pro plánování reality, vypněte, pokud chcete otestovat scénář „co kdybych vydělával víc“.',
+  },
+  milestoneLean: {
+    id: 'milestoneLean',
+    title: '1. Milník: Základní svoboda (Lean FI - 33 %)',
+    shortName: '1. Milník (Lean FI)',
+    category: 'Milník nezávislosti',
+    summary: 'Fáze, kdy pasivní příjem pokrývá první třetinu (33 %) vašich životních nákladů.',
+    details: 'Tento milník vám pokryje např. jídlo, energie a základní účty. Přináší obrovskou psychickou úlevu – víte, že jste přečkali nejistotu a systém spolehlivě funguje.',
+    example: 'Při cíli 25 000 Kč/měs máte pasivní příjem cca 8 250 Kč/měs.',
+    tip: 'Oslavte tento milník! Pokoření první třetiny bývá nejtěžší, odsud už složené úročení začíná výrazně pomáhat.',
+  },
+  milestoneBarista: {
+    id: 'milestoneBarista',
+    title: '2. Milník: Poloviční svoboda (Barista FI - 66 %)',
+    shortName: '2. Milník (Barista FI)',
+    category: 'Milník nezávislosti',
+    summary: 'Fáze, kdy pasivní příjem hradí dvě třetiny (66 %) vašich výdajů.',
+    details: 'Nazývá se „Barista FI“, protože k životu vám stačí libovolná pohodová brigáda nebo poloviční úvazek. Už nemusíte snášet toxické šéfy ani pracovat přesčas.',
+    example: 'Pasivní příjem 16 500 Kč/měs z potřebných 25 000 Kč/měs.',
+    tip: 'Zde mnoho lidí volí flexibilnější životní styl, zkrácený pracovní týden nebo začíná podnikat bez existenčního strachu.',
+  },
+  milestoneFire: {
+    id: 'milestoneFire',
+    title: '3. Milník: Úplná finanční nezávislost (FIRE - 100 %)',
+    shortName: '3. Milník (FIRE)',
+    category: 'Milník nezávislosti',
+    summary: 'Dosažení 100% finanční nezávislosti. Pasivní příjem plně hradí veškeré životní náklady.',
+    details: 'FIRE (Financial Independence, Retire Early). Práce je od této chvíle čistě dobrovolná volba. Vaše peníze pracují za vás.',
+    example: 'Pasivní příjem celých 25 000 Kč/měs z investičního kapitálu 7 500 000 Kč.',
+    tip: 'Gratulujeme, jste svobodný člověk. Můžete se věnovat rodině, tvorbě, filantropii nebo projektům, které vás naplňují.',
+  },
+  chartCompounding: {
+    id: 'chartCompounding',
+    title: 'Křivka složeného úročení a růstu majetku',
+    shortName: 'Křivka složeného úročení',
+    category: 'Grafický model',
+    summary: 'Vizuální porovnání vašich vlastních vkladů (zlatá plocha) a čistého zisku z ETF (zelená plocha).',
+    details: 'Zlatá plocha ukazuje, kolik korun jste sami poslali ze své výplaty. Zelená plocha ukazuje peníze, které pro vás vydělal trh. Sledujte, jak se po 5. roce křivka zvedá nahoru – to je síla exponenciály.',
+    tip: 'Na interaktivním grafu můžete najet myší (nebo klepnout prstem) na jednotlivé roky a zobrazit podrobný rozpad stavu.',
+  },
+};
 
 const ETF_RETURN_PRESETS = [
   {
@@ -65,7 +245,9 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
   monthlyIncome,
   onOpenCoach,
 }) => {
-  const [viewMode, setViewMode] = useState<'guide' | 'simulator'>('guide');
+  const [viewMode, setViewMode] = useState<'guide' | 'simulator' | 'glossary'>('guide');
+  const [activeExplanationId, setActiveExplanationId] = useState<string | null>(null);
+  const [glossarySearch, setGlossarySearch] = useState('');
 
   // Find Freedom Jar (Džbán finanční svobody)
   const freedomJar = jars.find((j) => j.id === 'freedom');
@@ -314,28 +496,28 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
           </button>
         </div>
 
-        {/* View Mode Switcher: Návod & Vysvětlivky vs. Simulátor */}
-        <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-2.5 border-b border-white/5 bg-[#141416]">
-          <div className="flex items-center gap-1.5">
+        {/* View Mode Switcher: Návod vs. Simulátor vs. Slovníček */}
+        <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-2.5 border-b border-white/5 bg-[#141416] overflow-x-auto scrollbar-none">
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
               id="tab-fi-guide"
               onClick={() => setViewMode('guide')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
                 viewMode === 'guide'
                   ? 'bg-[#d4af37]/15 text-[#d4af37] border border-[#d4af37]/30'
                   : 'text-white/50 hover:text-white hover:bg-white/5'
               }`}
             >
               <HelpCircle className="w-3.5 h-3.5" />
-              <span>Návod a srozumitelné vysvětlivky</span>
+              <span>Návod v lidské řeči</span>
             </button>
 
             <button
               type="button"
               id="tab-fi-simulator"
               onClick={() => setViewMode('simulator')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
                 viewMode === 'simulator'
                   ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                   : 'text-white/50 hover:text-white hover:bg-white/5'
@@ -343,6 +525,20 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
             >
               <TrendingUp className="w-3.5 h-3.5" />
               <span>Kalkulačka & graf</span>
+            </button>
+
+            <button
+              type="button"
+              id="tab-fi-glossary"
+              onClick={() => setViewMode('glossary')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                viewMode === 'glossary'
+                  ? 'bg-blue-500/15 text-blue-300 border border-blue-500/30'
+                  : 'text-white/50 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5 text-blue-400" />
+              <span>Slovníček ukazatelů ({Object.keys(METRIC_EXPLANATIONS).length})</span>
             </button>
           </div>
 
@@ -474,10 +670,20 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
               {/* Top KPI Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {/* KPI 1: Cílové číslo nezávislosti */}
-                <div className="p-3.5 rounded-xl bg-[#161618] border border-white/5">
-                  <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest block mb-1">
-                    Číslo finanční svobody
-                  </span>
+                <div className="p-3.5 rounded-xl bg-[#161618] border border-white/5 hover:border-white/15 transition-all">
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest truncate">
+                      Číslo finanční svobody
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveExplanationId('fiNumber')}
+                      className="p-1 -mr-1 text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-[#d4af37]/10 rounded-lg transition-colors cursor-pointer shrink-0"
+                      title="Co znamená Číslo finanční svobody?"
+                    >
+                      <HelpCircle className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                   <p className="text-lg sm:text-xl font-bold text-[#d4af37] tabular-nums">
                     {formatCZK(financialIndependenceTarget)}
                   </p>
@@ -487,10 +693,20 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
                 </div>
 
                 {/* KPI 2: Pasivní příjem za 10 let */}
-                <div className="p-3.5 rounded-xl bg-[#161618] border border-white/5">
-                  <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest block mb-1">
-                    Pasivní příjem za {simulationYears} let
-                  </span>
+                <div className="p-3.5 rounded-xl bg-[#161618] border border-white/5 hover:border-white/15 transition-all">
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest truncate">
+                      Pasivní příjem za {simulationYears} let
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveExplanationId('passiveIncome10y')}
+                      className="p-1 -mr-1 text-emerald-400/70 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors cursor-pointer shrink-0"
+                      title="Co znamená Pasivní příjem za 10 let?"
+                    >
+                      <HelpCircle className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                   <p className="text-lg sm:text-xl font-bold text-emerald-400 tabular-nums">
                     {formatCZK(finalYearData.monthlyPassiveIncome)} / měs
                   </p>
@@ -500,10 +716,20 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
                 </div>
 
                 {/* KPI 3: Celkový majetek za 10 let */}
-                <div className="p-3.5 rounded-xl bg-[#161618] border border-white/5">
-                  <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest block mb-1">
-                    Naspořeno a zhodnoceno
-                  </span>
+                <div className="p-3.5 rounded-xl bg-[#161618] border border-white/5 hover:border-white/15 transition-all">
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest truncate">
+                      Naspořeno a zhodnoceno
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveExplanationId('totalBalance10y')}
+                      className="p-1 -mr-1 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer shrink-0"
+                      title="Co znamená Naspořeno a zhodnoceno?"
+                    >
+                      <HelpCircle className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                   <p className="text-lg sm:text-xl font-bold text-white tabular-nums">
                     {formatCZK(finalYearData.totalBalance)}
                   </p>
@@ -513,10 +739,20 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
                 </div>
 
                 {/* KPI 4: Doba do cíle při tomto zhodnocení */}
-                <div className="p-3.5 rounded-xl bg-[#161618] border border-white/5">
-                  <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest block mb-1">
-                    Čas do dosažení cíle
-                  </span>
+                <div className="p-3.5 rounded-xl bg-[#161618] border border-white/5 hover:border-white/15 transition-all">
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest truncate">
+                      Čas do dosažení cíle
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveExplanationId('timeToTarget')}
+                      className="p-1 -mr-1 text-emerald-400/70 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors cursor-pointer shrink-0"
+                      title="Co znamená Čas do dosažení cíle?"
+                    >
+                      <HelpCircle className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                   <p className="text-lg sm:text-xl font-bold text-white tabular-nums">
                     {currentTimeToTarget
                       ? `${currentTimeToTarget.years} r. ${currentTimeToTarget.months > 0 ? `${currentTimeToTarget.months} m.` : ''}`
@@ -536,8 +772,16 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
                       <Zap className="w-4 h-4" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
-                        Modelování zhodnocení ETF fondů a zkrácení cesty
+                      <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-1.5">
+                        <span>Modelování zhodnocení ETF fondů a zkrácení cesty</span>
+                        <button
+                          type="button"
+                          onClick={() => setActiveExplanationId('annualReturnRate')}
+                          className="p-1 text-emerald-400/80 hover:text-emerald-300 hover:bg-emerald-500/10 rounded-lg transition-colors cursor-pointer"
+                          title="Co znamená roční výnos ETF fondů?"
+                        >
+                          <HelpCircle className="w-3.5 h-3.5" />
+                        </button>
                       </h3>
                       <p className="text-xs text-white/40 mt-0.5">
                         Posouvejte výnos a sledujte v reálném čase, o kolik let vám vyšší zhodnocení ušetří cestu k nezávislosti.
@@ -577,9 +821,19 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
 
                 {/* Quick Presets for standard ETF portfolios */}
                 <div>
-                  <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest block mb-2">
-                    Přednastavené strategie ETF fondů (klikněte pro vyzkoušení):
-                  </span>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest">
+                      Přednastavené strategie ETF fondů (klikněte pro vyzkoušení):
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveExplanationId('etfStrategies')}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#d4af37] hover:underline cursor-pointer"
+                    >
+                      <HelpCircle className="w-3 h-3" />
+                      <span>Jak vybrat strategii?</span>
+                    </button>
+                  </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {ETF_RETURN_PRESETS.map((p) => {
                       const isActive = annualReturnRate === p.rate;
@@ -610,48 +864,78 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
                 {/* Live Comparison Box: How much time is saved? */}
                 <div className="p-3.5 bg-[#0d0d0f] rounded-xl border border-white/5 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                   {/* Stat 1 */}
-                  <div className="flex items-center gap-2.5">
-                    <Clock className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <div>
-                      <span className="text-white/40 block text-[10px] uppercase font-semibold">
-                        Doba k nezávislosti
-                      </span>
-                      <span className="text-white font-bold text-sm tabular-nums">
-                        {currentTimeToTarget
-                          ? `${currentTimeToTarget.years} let ${currentTimeToTarget.months} měs.`
-                          : 'Více než 50 let'}
-                      </span>
+                  <div className="flex items-center justify-between gap-2 p-1 rounded-lg hover:bg-white/5 transition-colors">
+                    <div className="flex items-center gap-2.5">
+                      <Clock className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <div>
+                        <span className="text-white/40 block text-[10px] uppercase font-semibold">
+                          Doba k nezávislosti
+                        </span>
+                        <span className="text-white font-bold text-sm tabular-nums">
+                          {currentTimeToTarget
+                            ? `${currentTimeToTarget.years} let ${currentTimeToTarget.months} měs.`
+                            : 'Více než 50 let'}
+                        </span>
+                      </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveExplanationId('timeToTarget')}
+                      className="p-1 text-white/30 hover:text-white"
+                      title="Nápověda"
+                    >
+                      <HelpCircle className="w-3.5 h-3.5" />
+                    </button>
                   </div>
 
                   {/* Stat 2 */}
-                  <div className="flex items-center gap-2.5">
-                    <Zap className="w-4 h-4 text-[#d4af37] shrink-0" />
-                    <div>
-                      <span className="text-white/40 block text-[10px] uppercase font-semibold">
-                        Zkrácení cesty (vs. 5 % p.a.)
-                      </span>
-                      <span className="text-[#d4af37] font-bold text-sm tabular-nums">
-                        {timeSavedComparison
-                          ? `-${timeSavedComparison.years} let ${timeSavedComparison.months} měs.`
-                          : annualReturnRate <= 5
-                          ? 'Základní scénář'
-                          : 'Překročí 50 let'}
-                      </span>
+                  <div className="flex items-center justify-between gap-2 p-1 rounded-lg hover:bg-white/5 transition-colors">
+                    <div className="flex items-center gap-2.5">
+                      <Zap className="w-4 h-4 text-[#d4af37] shrink-0" />
+                      <div>
+                        <span className="text-white/40 block text-[10px] uppercase font-semibold">
+                          Zkrácení cesty (vs. 5 % p.a.)
+                        </span>
+                        <span className="text-[#d4af37] font-bold text-sm tabular-nums">
+                          {timeSavedComparison
+                            ? `-${timeSavedComparison.years} let ${timeSavedComparison.months} měs.`
+                            : annualReturnRate <= 5
+                            ? 'Základní scénář'
+                            : 'Překročí 50 let'}
+                        </span>
+                      </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveExplanationId('timeSaved')}
+                      className="p-1 text-white/30 hover:text-[#d4af37]"
+                      title="Nápověda"
+                    >
+                      <HelpCircle className="w-3.5 h-3.5" />
+                    </button>
                   </div>
 
                   {/* Stat 3 */}
-                  <div className="flex items-center gap-2.5">
-                    <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <div>
-                      <span className="text-white/40 block text-[10px] uppercase font-semibold">
-                        Navýšení zisku za 10 let
-                      </span>
-                      <span className="text-emerald-400 font-bold text-sm tabular-nums">
-                        +{formatCZK(extraGainsAt10Years)}
-                      </span>
+                  <div className="flex items-center justify-between gap-2 p-1 rounded-lg hover:bg-white/5 transition-colors">
+                    <div className="flex items-center gap-2.5">
+                      <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <div>
+                        <span className="text-white/40 block text-[10px] uppercase font-semibold">
+                          Navýšení zisku za 10 let
+                        </span>
+                        <span className="text-emerald-400 font-bold text-sm tabular-nums">
+                          +{formatCZK(extraGainsAt10Years)}
+                        </span>
+                      </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveExplanationId('extraGains')}
+                      className="p-1 text-white/30 hover:text-emerald-400"
+                      title="Nápověda"
+                    >
+                      <HelpCircle className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -662,7 +946,15 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
                   <div>
                     <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
                       <TrendingUp className="w-4 h-4 text-emerald-400" />
-                      Křivka složeného úročení a růstu majetku (10 let)
+                      <span>Křivka složeného úročení a růstu majetku (10 let)</span>
+                      <button
+                        type="button"
+                        onClick={() => setActiveExplanationId('chartCompounding')}
+                        className="p-1 text-[#d4af37]/80 hover:text-[#d4af37] hover:bg-[#d4af37]/10 rounded-lg transition-colors cursor-pointer"
+                        title="Co ukazuje křivka složeného úročení?"
+                      >
+                        <HelpCircle className="w-3.5 h-3.5" />
+                      </button>
                     </h3>
                     <p className="text-xs text-white/40 mt-0.5">
                       Zelená plocha představuje zisk z ETF fondů ({annualReturnRate} % p.a.), zlatá vaše vlastní vklady.
@@ -825,8 +1117,8 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
                   <div className="flex items-center gap-2.5">
                     <Sliders className="w-4 h-4 text-[#d4af37]" />
-                    <h3 className="text-sm font-bold text-white">
-                      Nastavení výše vkladů a životních nákladů
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <span>Nastavení výše vkladů a životních nákladů</span>
                     </h3>
                   </div>
 
@@ -835,24 +1127,42 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
                       type="button"
                       id="btn-toggle-auto-sync"
                       onClick={handleToggleAutoSync}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
                         useAutoSync
                           ? 'bg-[#d4af37]/15 text-[#d4af37] border-[#d4af37]/30'
                           : 'bg-white/5 text-white/50 border-white/10 hover:text-white'
                       }`}
                     >
-                      {useAutoSync ? '✓ Propojeno se džbánem Svoboda' : 'Vlastní simulace (odpojeno)'}
+                      <span>{useAutoSync ? '✓ Propojeno se džbánem Svoboda' : 'Vlastní simulace (odpojeno)'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveExplanationId('autoSync')}
+                      className="p-1 text-white/40 hover:text-[#d4af37] rounded-lg transition-colors cursor-pointer"
+                      title="Co znamená propojení se džbány?"
+                    >
+                      <HelpCircle className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Input: Měsíční investice */}
-                  <div>
+                  <div className="p-3 bg-[#121214] rounded-xl border border-white/5 hover:border-white/10 transition-colors">
                     <div className="flex justify-between items-baseline mb-1">
-                      <label className="text-[11px] font-semibold text-white/40 uppercase tracking-widest">
-                        Měsíční investice do FFA
-                      </label>
+                      <div className="flex items-center gap-1">
+                        <label className="text-[11px] font-semibold text-white/50 uppercase tracking-widest">
+                          Měsíční investice do FFA
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setActiveExplanationId('monthlyInvestment')}
+                          className="p-0.5 text-[#d4af37]/70 hover:text-[#d4af37] rounded transition-colors cursor-pointer"
+                          title="Nápověda k měsíční investici"
+                        >
+                          <HelpCircle className="w-3 h-3" />
+                        </button>
+                      </div>
                       <span className="text-xs font-bold text-emerald-400 tabular-nums">
                         {formatCZK(monthlyInvestment)}/měs
                       </span>
@@ -866,19 +1176,36 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
                       disabled={useAutoSync}
                       value={monthlyInvestment}
                       onChange={(e) => setMonthlyInvestment(Number(e.target.value))}
-                      className="w-full accent-[#d4af37] cursor-pointer"
+                      className="w-full accent-[#d4af37] cursor-pointer mt-1"
                     />
-                    <span className="text-[10px] text-white/40">
-                      {useAutoSync ? `Automaticky ${freedomJar?.percentage || 10} % z příjmu ${formatCZK(monthlyIncome)}` : 'Ručně nastavená částka'}
-                    </span>
+                    <div className="flex justify-between items-center text-[10px] text-white/40 mt-1">
+                      <span>{useAutoSync ? `Automaticky ${freedomJar?.percentage || 10} % z příjmu ${formatCZK(monthlyIncome)}` : 'Ručně nastavená částka'}</span>
+                      <button
+                        type="button"
+                        onClick={() => setActiveExplanationId('monthlyInvestment')}
+                        className="text-[#d4af37] hover:underline cursor-pointer"
+                      >
+                        Jak se počítá?
+                      </button>
+                    </div>
                   </div>
 
                   {/* Input: Cílový měsíční pasivní příjem */}
-                  <div>
+                  <div className="p-3 bg-[#121214] rounded-xl border border-white/5 hover:border-white/10 transition-colors">
                     <div className="flex justify-between items-baseline mb-1">
-                      <label className="text-[11px] font-semibold text-white/40 uppercase tracking-widest">
-                        Cílový pasivní příjem
-                      </label>
+                      <div className="flex items-center gap-1">
+                        <label className="text-[11px] font-semibold text-white/50 uppercase tracking-widest">
+                          Cílový pasivní příjem
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setActiveExplanationId('targetMonthlyPassive')}
+                          className="p-0.5 text-[#d4af37]/70 hover:text-[#d4af37] rounded transition-colors cursor-pointer"
+                          title="Nápověda k cílovému příjmu"
+                        >
+                          <HelpCircle className="w-3 h-3" />
+                        </button>
+                      </div>
                       <span className="text-xs font-bold text-white tabular-nums">
                         {formatCZK(targetMonthlyPassive)}/měs
                       </span>
@@ -894,28 +1221,53 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
                         setTargetMonthlyPassive(Number(e.target.value));
                         setUseAutoSync(false);
                       }}
-                      className="w-full accent-[#d4af37] cursor-pointer"
+                      className="w-full accent-[#d4af37] cursor-pointer mt-1"
                     />
-                    <span className="text-[10px] text-white/40">
-                      Částka, kterou potřebujete měsíčně pro život bez nutnosti pracovat
-                    </span>
+                    <div className="flex justify-between items-center text-[10px] text-white/40 mt-1">
+                      <span className="truncate">Částka pro život bez práce</span>
+                      <button
+                        type="button"
+                        onClick={() => setActiveExplanationId('targetMonthlyPassive')}
+                        className="text-[#d4af37] hover:underline cursor-pointer shrink-0"
+                      >
+                        Doporučení Smart Life
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Three Freedom Milestones (Smart Life Methodology) */}
               <div className="space-y-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Target className="w-4 h-4 text-[#d4af37]" />
-                  Milníky finanční nezávislosti (Smart Life)
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Target className="w-4 h-4 text-[#d4af37]" />
+                    <span>Milníky finanční nezávislosti (Smart Life)</span>
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setActiveExplanationId('milestoneLean')}
+                    className="inline-flex items-center gap-1 text-xs text-[#d4af37] hover:underline cursor-pointer"
+                  >
+                    <HelpCircle className="w-3.5 h-3.5" />
+                    <span>Proč 3 milníky?</span>
+                  </button>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {/* Milestone 1 */}
-                  <div className="p-4 rounded-xl bg-[#161618] border border-white/5 space-y-2">
+                  <div className="p-4 rounded-xl bg-[#161618] border border-white/5 space-y-2 hover:border-white/15 transition-all">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-white/50">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-white/50 flex items-center gap-1">
                         1. Základní svoboda (Lean)
+                        <button
+                          type="button"
+                          onClick={() => setActiveExplanationId('milestoneLean')}
+                          className="text-[#d4af37]/70 hover:text-[#d4af37] cursor-pointer"
+                          title="Vysvětlení milníku"
+                        >
+                          <HelpCircle className="w-3 h-3" />
+                        </button>
                       </span>
                       <span className="text-xs font-bold text-[#d4af37]">
                         {milestoneLean ? `Za ${milestoneLean.year} let` : '> 10 let'}
@@ -930,10 +1282,18 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
                   </div>
 
                   {/* Milestone 2 */}
-                  <div className="p-4 rounded-xl bg-[#161618] border border-white/5 space-y-2">
+                  <div className="p-4 rounded-xl bg-[#161618] border border-white/5 space-y-2 hover:border-white/15 transition-all">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
                         2. Poloviční svoboda (Barista)
+                        <button
+                          type="button"
+                          onClick={() => setActiveExplanationId('milestoneBarista')}
+                          className="text-emerald-400/70 hover:text-emerald-400 cursor-pointer"
+                          title="Vysvětlení milníku"
+                        >
+                          <HelpCircle className="w-3 h-3" />
+                        </button>
                       </span>
                       <span className="text-xs font-bold text-emerald-400">
                         {milestoneBarista ? `Za ${milestoneBarista.year} let` : '> 10 let'}
@@ -948,10 +1308,18 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
                   </div>
 
                   {/* Milestone 3 */}
-                  <div className="p-4 rounded-xl bg-[#161618] border border-[#d4af37]/30 bg-gradient-to-br from-[#161618] to-[#1a1813] space-y-2">
+                  <div className="p-4 rounded-xl bg-[#161618] border border-[#d4af37]/30 bg-gradient-to-br from-[#161618] to-[#1a1813] space-y-2 hover:border-[#d4af37]/50 transition-all">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#d4af37]">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#d4af37] flex items-center gap-1">
                         3. Úplná nezávislost (FIRE)
+                        <button
+                          type="button"
+                          onClick={() => setActiveExplanationId('milestoneFire')}
+                          className="text-[#d4af37] hover:brightness-125 cursor-pointer"
+                          title="Vysvětlení milníku"
+                        >
+                          <HelpCircle className="w-3 h-3" />
+                        </button>
                       </span>
                       <span className="text-xs font-bold text-[#d4af37]">
                         {milestoneFull ? `Za ${milestoneFull.year} let` : '> 10 let'}
@@ -967,6 +1335,82 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
                 </div>
               </div>
             </>
+          )}
+
+          {/* VIEW MODE 3: SLOVNÍČEK VŠECH UKAZATELŮ A NÁPOVĚDA */}
+          {viewMode === 'glossary' && (
+            <div className="space-y-4">
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#161618] to-[#121214] border border-blue-500/30 space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400">
+                  Kompletní přehled pojmů
+                </span>
+                <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-blue-400" />
+                  Slovníček všech ukazatelů finanční nezávislosti
+                </h3>
+                <p className="text-xs sm:text-sm text-white/70 leading-relaxed">
+                  Zde najdete podrobné vysvětlení každé metriky, vzorce a pravidla, které aplikace používá. Kliknutím na libovolný ukazatel otevřete jeho detailní výklad s příklady a tipy.
+                </p>
+              </div>
+
+              {/* Search Bar in Glossary */}
+              <div className="relative">
+                <Search className="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={glossarySearch}
+                  onChange={(e) => setGlossarySearch(e.target.value)}
+                  placeholder="Hledat v ukazatelích (např. Číslo svobody, pravidlo 4 %, ETF, zisk, milník...)"
+                  className="w-full pl-9 pr-3 py-2.5 text-xs bg-[#161618] border border-white/10 rounded-xl text-white placeholder-white/30 focus:border-[#d4af37]/60 focus:outline-none transition-colors"
+                />
+              </div>
+
+              {/* Glossary Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                {Object.values(METRIC_EXPLANATIONS)
+                  .filter((m) => {
+                    if (!glossarySearch.trim()) return true;
+                    const q = glossarySearch.toLowerCase();
+                    return (
+                      m.title.toLowerCase().includes(q) ||
+                      m.summary.toLowerCase().includes(q) ||
+                      m.details.toLowerCase().includes(q) ||
+                      m.category.toLowerCase().includes(q)
+                    );
+                  })
+                  .map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => setActiveExplanationId(item.id)}
+                      className="p-4 rounded-xl bg-[#161618] border border-white/10 hover:border-[#d4af37]/40 transition-all space-y-2.5 cursor-pointer group"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-white/5 text-[#d4af37] border border-white/10">
+                            {item.category}
+                          </span>
+                          <h4 className="text-sm font-bold text-white mt-1 group-hover:text-[#d4af37] transition-colors">
+                            {item.title}
+                          </h4>
+                        </div>
+                        <span className="px-2 py-1 text-[11px] font-semibold text-[#d4af37] bg-[#d4af37]/10 group-hover:bg-[#d4af37]/20 border border-[#d4af37]/30 rounded-lg transition-colors shrink-0">
+                          Detail →
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-white/70 leading-relaxed">
+                        {item.summary}
+                      </p>
+
+                      {item.formula && (
+                        <div className="p-2 bg-[#0d0d0f] rounded-lg border border-white/5 text-[11px] font-mono text-emerald-400">
+                          {item.formula}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </div>
+            </div>
           )}
         </div>
 
@@ -984,6 +1428,90 @@ export const FinancialIndependenceModal: React.FC<FinancialIndependenceModalProp
             Rozumím, pokračovat k rozpočtu
           </button>
         </div>
+
+        {/* Active Metric Explanation Modal/Overlay Popover */}
+        {activeExplanationId && METRIC_EXPLANATIONS[activeExplanationId] && (() => {
+          const exp = METRIC_EXPLANATIONS[activeExplanationId];
+          return (
+            <div
+              className="fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-xs animate-fadeIn"
+              onClick={() => setActiveExplanationId(null)}
+            >
+              <div
+                className="relative w-full max-w-lg bg-[#141417] rounded-2xl border border-[#d4af37]/40 shadow-2xl p-5 sm:p-6 space-y-4 text-[#e5e5e7] max-h-[85vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#d4af37]/15 text-[#d4af37] border border-[#d4af37]/30">
+                      {exp.category}
+                    </span>
+                    <h3 className="text-base sm:text-lg font-bold text-white mt-1.5 flex items-center gap-2">
+                      <HelpCircle className="w-5 h-5 text-[#d4af37]" />
+                      {exp.title}
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setActiveExplanationId(null)}
+                    className="p-1.5 text-white/50 hover:text-white rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-white/5 border border-white/5 text-xs text-white/90 font-medium leading-relaxed">
+                  {exp.summary}
+                </div>
+
+                <div className="space-y-1.5 text-xs text-white/70 leading-relaxed">
+                  <strong className="text-white block">Podrobné vysvětlení:</strong>
+                  <p>{exp.details}</p>
+                </div>
+
+                {exp.formula && (
+                  <div className="p-3 rounded-xl bg-[#0d0d0f] border border-white/10 space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-white/40 block">
+                      Matematický vzorec:
+                    </span>
+                    <p className="text-xs font-mono text-emerald-400">
+                      {exp.formula}
+                    </p>
+                  </div>
+                )}
+
+                {exp.example && (
+                  <div className="p-3 rounded-xl bg-[#0d0d0f] border border-white/10 space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-white/40 block">
+                      Příklad v praxi:
+                    </span>
+                    <p className="text-xs text-white/70">
+                      {exp.example}
+                    </p>
+                  </div>
+                )}
+
+                <div className="p-3 rounded-xl bg-[#d4af37]/10 border border-[#d4af37]/25 flex items-start gap-2.5 text-xs text-[#d4af37]">
+                  <Sparkles className="w-4 h-4 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="block text-white font-bold">Doporučení Smart Life:</strong>
+                    <span className="text-white/80">{exp.tip}</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setActiveExplanationId(null)}
+                    className="px-5 py-2 bg-gradient-to-r from-[#d4af37] to-[#c59e2b] text-[#0a0a0b] text-xs font-bold rounded-xl hover:brightness-110 transition-all cursor-pointer shadow-md"
+                  >
+                    Rozumím, pokračovat
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
